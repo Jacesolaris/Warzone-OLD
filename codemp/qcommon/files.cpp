@@ -761,7 +761,14 @@ qboolean FS_FileExists( const char *file )
 	if (FS_FileInPathExists(FS_BuildOSPath(fs_basepath->string, fs_gamedir, file))) 
 		return qtrue;
 
-	return FS_FileInPathExists(FS_BuildOSPath(fs_homepath->string, fs_gamedir, file));
+	if (FS_FileInPathExists(FS_BuildOSPath(fs_homepath->string, fs_gamedir, file)))
+		return qtrue;
+
+	int nChkSum1 = 0;
+	if (FS_FileIsInPAK(file, &nChkSum1))
+		return qtrue;
+
+	return qfalse;
 }
 
 /*

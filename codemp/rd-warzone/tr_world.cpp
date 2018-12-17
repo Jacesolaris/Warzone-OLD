@@ -838,7 +838,7 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 					v[2] = node->maxs[2];
 				}
 
-				float distance = Distance(tr.viewParms.ori.origin, v);
+				float distance = Distance(/*tr.viewParms.ori.origin*/tr.refdef.vieworg, v);
 
 				if (distance < closestCornerDistance)
 				{

@@ -305,10 +305,10 @@ void Cvar_Check_DisplayameAndDescription(cvar_t *cvar)
 			return;
 		}
 		// Default this one to the cvar name. We can then see them in the UI when missing and fix...
-		strcpy(cvar->displayName, IniRead("cvarInfo.ini", "DISPLAY_NAME", cvar->name, cvar->name));
+		strcpy(cvar->displayName, IniRead("cvarInfo.cfg", "DISPLAY_NAME", cvar->name, cvar->name));
 
 		// Defaults to nothing, if no description (tooltip) is found...
-		strcpy(cvar->description, IniRead("cvarInfo.ini", "DESCRIPTION", cvar->name, ""));
+		strcpy(cvar->description, IniRead("cvarInfo.cfg", "DESCRIPTION", cvar->name, ""));
 
 		cvar->displayInfoSet = qtrue;
 

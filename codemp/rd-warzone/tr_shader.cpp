@@ -9231,6 +9231,9 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	}
 
 	if (isEfxShader) shader.materialType = MATERIAL_EFX;
+#ifndef __SHADER_GENERATOR__
+	int material = DetectMaterialType(name);
+#endif //__SHADER_GENERATOR__
 	if (shader.materialType == MATERIAL_NONE) shader.materialType = material;
 
 	//findshader_lock.unlock();
