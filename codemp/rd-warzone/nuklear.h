@@ -14357,7 +14357,7 @@ nk_button_behavior(nk_flags *state, struct nk_rect r,
 
 		if (*state == NK_WIDGET_STATE_ACTIVE)
 		{
-	        if (nk_input_has_mouse_click_in_rect(i, NK_BUTTON_LEFT, r)) 
+			if (nk_input_has_mouse_click_in_rect(i, NK_BUTTON_LEFT, r))
 			{
 #ifdef NK_BUTTON_TRIGGER_ON_RELEASE
 				ret = (behavior != NK_BUTTON_DEFAULT) ? nk_input_is_mouse_down(i, NK_BUTTON_LEFT) : nk_input_is_mouse_released(i, NK_BUTTON_LEFT);
@@ -14369,15 +14369,7 @@ nk_button_behavior(nk_flags *state, struct nk_rect r,
 					ri->Printf(PRINT_WARNING, "CLICKED at %f %f.\n", r.x, r.y);
 				}
 			}
-			/*else
-			{
-				ret = -1; // UQ1: For tooltips... Hope this doesn't hurt...
-			}*/
 		}
-		/*else
-		{
-			ret = -1; // UQ1: For tooltips... Hope this doesn't hurt...
-		}*/
     }
 	if (*state & NK_WIDGET_STATE_HOVER && !nk_input_is_mouse_prev_hovering_rect(i, r))
 	{
@@ -15039,15 +15031,17 @@ nk_slider_behavior(nk_flags *state, struct nk_rect *logical_cursor,
     float slider_step, float slider_steps)
 {
     int left_mouse_down;
+	int left_mouse_clicked;
     int left_mouse_click_in_cursor;
 
     /* check if visual cursor is being dragged */
     nk_widget_state_reset(state);
     left_mouse_down = in && in->mouse.buttons[NK_BUTTON_LEFT].down;
+	left_mouse_clicked = in->mouse.buttons[NK_BUTTON_LEFT].clicked;
     left_mouse_click_in_cursor = in && nk_input_has_mouse_click_down_in_rect(in,
             NK_BUTTON_LEFT, *visual_cursor, nk_true);
 
-    if (left_mouse_down && left_mouse_click_in_cursor)
+    if (left_mouse_down && left_mouse_click_in_cursor && !left_mouse_clicked)
     {
         float ratio = 0;
         const float d = in->mouse.pos.x - (visual_cursor->x+visual_cursor->w*0.5f);
@@ -15239,10 +15233,11 @@ nk_progress_behavior(nk_flags *state, const struct nk_input *in,
     nk_widget_state_reset(state);
     if (in && modifiable && nk_input_is_mouse_hovering_rect(in, r)) {
         int left_mouse_down = in->mouse.buttons[NK_BUTTON_LEFT].down;
+		int left_mouse_clicked = in->mouse.buttons[NK_BUTTON_LEFT].clicked;
         int left_mouse_click_in_cursor = nk_input_has_mouse_click_down_in_rect(in,
             NK_BUTTON_LEFT, r, nk_true);
 
-        if (left_mouse_down && left_mouse_click_in_cursor) {
+        if (left_mouse_down && left_mouse_click_in_cursor && !left_mouse_clicked) {
             float ratio = NK_MAX(0, (float)(in->mouse.pos.x - r.x)) / (float)r.w;
             value = (nk_size)NK_MAX(0,((float)max * ratio));
             *state = NK_WIDGET_STATE_ACTIVE;
@@ -15342,6 +15337,7 @@ nk_scrollbar_behavior(nk_flags *state, struct nk_input *in,
 {
     nk_flags ws = 0;
     int left_mouse_down;
+	int left_mouse_clicked;
     int left_mouse_click_in_cursor;
     float scroll_delta;
 
@@ -15349,13 +15345,14 @@ nk_scrollbar_behavior(nk_flags *state, struct nk_input *in,
     if (!in) return scroll_offset;
 
     left_mouse_down = in->mouse.buttons[NK_BUTTON_LEFT].down;
+	left_mouse_clicked = in->mouse.buttons[NK_BUTTON_LEFT].clicked;
     left_mouse_click_in_cursor = nk_input_has_mouse_click_down_in_rect(in,
         NK_BUTTON_LEFT, *cursor, nk_true);
     if (nk_input_is_mouse_hovering_rect(in, *scroll))
         *state = NK_WIDGET_STATE_HOVERED;
 
     scroll_delta = (o == NK_VERTICAL) ? in->mouse.scroll_delta.y: in->mouse.scroll_delta.x;
-    if (left_mouse_down && left_mouse_click_in_cursor) {
+    if (left_mouse_down && left_mouse_click_in_cursor && !left_mouse_clicked) {
         /* update cursor by mouse dragging */
         float pixel, delta;
         *state = NK_WIDGET_STATE_ACTIVE;
@@ -15437,7 +15434,7 @@ nk_draw_scrollbar(struct nk_command_buffer *out, nk_flags state,
     }
 
     /* draw cursor */
-    if (background->type == NK_STYLE_ITEM_COLOR) {
+    if (cursor->type == NK_STYLE_ITEM_COLOR) {
         nk_fill_rect(out, *scroll, style->rounding_cursor, cursor->data.color);
         nk_stroke_rect(out, *scroll, style->rounding_cursor, style->border_cursor, style->cursor_border_color);
     } else nk_draw_image(out, *scroll, &cursor->data.image, nk_white);
@@ -16309,6 +16306,7 @@ nk_drag_behavior(nk_flags *state, const struct nk_input *in,
     float inc_per_pixel)
 {
     int left_mouse_down = in && in->mouse.buttons[NK_BUTTON_LEFT].down;
+	int left_mouse_clicked = in->mouse.buttons[NK_BUTTON_LEFT].clicked;
     int left_mouse_click_in_cursor = in &&
         nk_input_has_mouse_click_down_in_rect(in, NK_BUTTON_LEFT, drag, nk_true);
 
@@ -16316,7 +16314,7 @@ nk_drag_behavior(nk_flags *state, const struct nk_input *in,
     if (nk_input_is_mouse_hovering_rect(in, drag))
         *state = NK_WIDGET_STATE_HOVERED;
 
-    if (left_mouse_down && left_mouse_click_in_cursor) {
+    if (left_mouse_down && left_mouse_click_in_cursor && !left_mouse_clicked) {
         float delta, pixels;
         pixels = in->mouse.delta.x;
         delta = pixels * inc_per_pixel;
@@ -17725,6 +17723,8 @@ nk_clear(struct nk_context *ctx)
             iter == ctx->active) {
             ctx->active = iter->prev;
             ctx->end = iter->prev;
+			if (!ctx->end)
+				ctx->begin = 0;
             if (ctx->active)
                 ctx->active->flags &= ~(unsigned)NK_WINDOW_ROM;
         }
@@ -18051,6 +18051,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
     /* window movement */
     if ((win->flags & NK_WINDOW_MOVABLE) && !(win->flags & NK_WINDOW_ROM)) {
         int left_mouse_down;
+		int left_mouse_clicked;
         int left_mouse_click_in_cursor;
 
         /* calculate draggable window space */
@@ -18065,9 +18066,10 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
 
         /* window movement by dragging */
         left_mouse_down = in->mouse.buttons[NK_BUTTON_LEFT].down;
+		left_mouse_clicked = (int)in->mouse.buttons[NK_BUTTON_LEFT].clicked;
         left_mouse_click_in_cursor = nk_input_has_mouse_click_down_in_rect(in,
             NK_BUTTON_LEFT, header, nk_true);
-        if (left_mouse_down && left_mouse_click_in_cursor) {
+		if (left_mouse_down && left_mouse_click_in_cursor && !left_mouse_clicked) {
             win->bounds.x = win->bounds.x + in->mouse.delta.x;
             win->bounds.y = win->bounds.y + in->mouse.delta.y;
             in->mouse.buttons[NK_BUTTON_LEFT].clicked_pos.x += in->mouse.delta.x;
@@ -18467,10 +18469,11 @@ nk_panel_end(struct nk_context *ctx)
         if (!(window->flags & NK_WINDOW_ROM)) {
             struct nk_vec2 window_size = style->window.min_size;
             int left_mouse_down = in->mouse.buttons[NK_BUTTON_LEFT].down;
+			int left_mouse_clicked = in->mouse.buttons[NK_BUTTON_LEFT].clicked;
             int left_mouse_click_in_scaler = nk_input_has_mouse_click_down_in_rect(in,
                     NK_BUTTON_LEFT, scaler, nk_true);
 
-            if (left_mouse_down && left_mouse_click_in_scaler) {
+            if (left_mouse_down && left_mouse_click_in_scaler && !left_mouse_clicked) {
                 float delta_x = in->mouse.delta.x;
                 if (layout->flags & NK_WINDOW_SCALE_LEFT) {
                     delta_x = -delta_x;

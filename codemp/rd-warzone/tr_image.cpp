@@ -4973,6 +4973,9 @@ void R_CreateBuiltinImages( void ) {
 		}
 	}*/
 
+	tr.envmapImage = R_FindImageFile("textures/genericEnvMap/envmap.png", IMGTYPE_COLORALPHA, IMGFLAG_MIPMAP);
+	tr.envmapSpecImage = R_FindImageFile("textures/genericEnvMap/envmap_spec.png", IMGTYPE_COLORALPHA, IMGFLAG_MIPMAP);
+
 	// with overbright bits active, we need an image which is some fraction of full color,
 	// for default lightmaps, etc
 	for (x=0 ; x<DEFAULT_SIZE ; x++) {

@@ -1412,6 +1412,16 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				stage->bundle[0].image = tr.whiteImage;
 				continue;
 			}
+			else if (!Q_stricmp(token, "envmap") || !Q_stricmp(token, "$envmap"))
+			{
+				stage->bundle[0].image = tr.whiteImage;
+				continue;
+			}
+			else if (!Q_stricmp(token, "envmap_spec") || !Q_stricmp(token, "$envmap_spec"))
+			{
+				stage->bundle[0].image = tr.whiteImage;
+				continue;
+			}
 			else if ( !Q_stricmp( token, "$lightmap" ) )
 			{
 				stage->bundle[0].isLightmap = qtrue;

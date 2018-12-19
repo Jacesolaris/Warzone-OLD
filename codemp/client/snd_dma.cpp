@@ -152,7 +152,7 @@ void S_Init( void ) {
 	Com_Printf("\n------- sound initialization -------\n");
 
 	s_disable = Cvar_Get ("s_disable", "0", CVAR_ARCHIVE);
-	s_musicSelection = Cvar_Get ("s_musicSelection", "1", CVAR_ARCHIVE);
+	s_musicSelection = Cvar_Get ("s_musicSelection", "2", CVAR_ARCHIVE);
 	s_volume = Cvar_Get ("s_volume", "1.0", CVAR_ARCHIVE);
 	s_volumeVoice= Cvar_Get ("s_volumeVoice", "1.0", CVAR_ARCHIVE);
 	s_volumeEffects= Cvar_Get ("s_volumeEffects", "0.7", CVAR_ARCHIVE);

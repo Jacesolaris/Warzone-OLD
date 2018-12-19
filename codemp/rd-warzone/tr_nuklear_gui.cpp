@@ -1109,7 +1109,7 @@ uq_widget_centered(struct nk_context *ctx, struct media *media, float height)
 
 qboolean uq_checkbox(struct nk_context *ctx, struct media *media, char *label, qboolean currentSetting)
 {
-	bool checked = (bool)currentSetting;
+	bool checked = (currentSetting == qtrue);
 
 	/*------------------------------------------------
 	*                  TOGGLE
@@ -1128,7 +1128,7 @@ qboolean uq_checkbox(struct nk_context *ctx, struct media *media, char *label, q
 
 int uq_radio(struct nk_context *ctx, struct media *media, char *label, int currentSetting, int maxSetting)
 {
-	int setting = (bool)currentSetting;
+	int setting = currentSetting;
 
 	/*------------------------------------------------
 	*                  RADIO
@@ -1300,7 +1300,7 @@ char				RADIO_CUSTOM_STATION_ICON[512] = { 0 };
 char				RADIO_CUSTOM_STATION_MAPNAME[128] = { 0 };
 
 qboolean			RADIO_ICONS_INITIALIZED = qfalse;
-struct nk_image		RADIO_ICONS[6];
+struct nk_image		RADIO_ICONS[7];
 
 void GUI_Radio_InitRadioIcons(void)
 {
@@ -1311,8 +1311,9 @@ void GUI_Radio_InitRadioIcons(void)
 		RADIO_ICONS[2] = icon_load("Warzone/gui/images/radioStations/relaxingRadio.png");
 		RADIO_ICONS[3] = icon_load("Warzone/gui/images/radioStations/mapRadio.png");
 		RADIO_ICONS[4] = icon_load("Warzone/gui/images/radioStations/customRadio.png");
+		RADIO_ICONS[5] = icon_load("Warzone/gui/images/radioStations/radioOff.png");
 
-		RADIO_ICONS[5] = RADIO_ICONS[3]; // Backup of icon to save reloading later...
+		RADIO_ICONS[6] = RADIO_ICONS[3]; // Backup of icon to save reloading later...
 	}
 
 	RADIO_ICONS_INITIALIZED = qtrue;
@@ -1347,7 +1348,7 @@ void GUI_Radio_InitCustomStations(void)
 		RADIO_ICONS[3] = icon_load(icon);
 	}
 	else
-		RADIO_ICONS[3] = RADIO_ICONS[5];
+		RADIO_ICONS[3] = RADIO_ICONS[6];
 
 	RADIO_CUSTOM_STATION_INITIALIZED = qtrue;
 }
@@ -1358,17 +1359,20 @@ static struct nk_vec2 radio_piemenu_pos;
 static void
 GUI_Radio(struct nk_context *ctx, struct media *media)
 {
-	float size[2] = { 516.0, 170.0 };
+	GUI_Radio_InitCustomStations();
+
+	float size[2] = { (strlen(RADIO_CUSTOM_STATION_NAME) > 0) ? 616.0f : 516.0f, 170.0f };
 	char tooltipString[512] = { 0 };
 	memset(tooltipString, 0, sizeof(tooltipString));
-
-	GUI_Radio_InitCustomStations();
 
 	int i = 0;
 	nk_style_set_font(ctx, &media->font_20->handle);
 	nk_begin(ctx, "Radio", nk_rect(64.0, ((float)FBO_HEIGHT - size[1]) - 64.0, size[0], size[1]), NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE | NK_WINDOW_NO_SCROLLBAR);
 
-	nk_layout_row_static(ctx, 96, 96, 5);
+	if (strlen(RADIO_CUSTOM_STATION_NAME) > 0)
+		nk_layout_row_static(ctx, 96, 96, 6);
+	else
+		nk_layout_row_static(ctx, 96, 96, 5);
 
 
 	//
@@ -1441,36 +1445,96 @@ GUI_Radio(struct nk_context *ctx, struct media *media)
 			ri->Cvar_Set("s_musicSelection", "3");
 
 
-	}
+		if (currentRadioSelection == 4)
+		{
+			bgColor = ColorForQuality(QUALITY_BLUE);
+			ctx->style.button.border_color = bgColor;
+		}
+		else
+		{
+			bgColor = nk_rgba(64, 64, 64, 255);
+			ctx->style.button.border_color = bgColor;
+		}
 
-	if (currentRadioSelection == 4)
-	{
-		bgColor = ColorForQuality(QUALITY_BLUE);
-		ctx->style.button.border_color = bgColor;
+		if (nk_button_image_label(ctx, RADIO_ICONS[4], "", NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED))
+			ri->Cvar_Set("s_musicSelection", "4");
+
+
+		if (currentRadioSelection == 5)
+		{
+			bgColor = ColorForQuality(QUALITY_BLUE);
+			ctx->style.button.border_color = bgColor;
+		}
+		else
+		{
+			bgColor = nk_rgba(64, 64, 64, 255);
+			ctx->style.button.border_color = bgColor;
+		}
+
+		if (nk_button_image_label(ctx, RADIO_ICONS[5], "", NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED))
+			ri->Cvar_Set("s_musicSelection", "5");
 	}
 	else
 	{
-		bgColor = nk_rgba(64, 64, 64, 255);
-		ctx->style.button.border_color = bgColor;
+		if (currentRadioSelection == 4)
+		{
+			bgColor = ColorForQuality(QUALITY_BLUE);
+			ctx->style.button.border_color = bgColor;
+		}
+		else
+		{
+			bgColor = nk_rgba(64, 64, 64, 255);
+			ctx->style.button.border_color = bgColor;
+		}
+
+		if (nk_button_image_label(ctx, RADIO_ICONS[4], "", NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED))
+			ri->Cvar_Set("s_musicSelection", "4");
+
+
+		if (currentRadioSelection == 5)
+		{
+			bgColor = ColorForQuality(QUALITY_BLUE);
+			ctx->style.button.border_color = bgColor;
+		}
+		else
+		{
+			bgColor = nk_rgba(64, 64, 64, 255);
+			ctx->style.button.border_color = bgColor;
+		}
+
+		if (nk_button_image_label(ctx, RADIO_ICONS[5], "", NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED))
+			ri->Cvar_Set("s_musicSelection", "5");
 	}
 
-	if (nk_button_image_label(ctx, RADIO_ICONS[4], "", NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED))
-		ri->Cvar_Set("s_musicSelection", "4");
 
 
 
+	if (strlen(RADIO_CUSTOM_STATION_NAME) > 0)
+		nk_layout_row_static(ctx, 28, 96, 6);
+	else
+		nk_layout_row_static(ctx, 28, 96, 5);
 
-	nk_layout_row_static(ctx, 28, 96, 5);
 	nk_style_set_font(ctx, &media->font_14->handle);
-	nk_text(ctx, (currentRadioSelection == 0) ? "^7Galactic Radio" : "Galactic Radio", strlen((currentRadioSelection == 0) ? "^7Galactic Radio" : "Galactic Radio"), NK_TEXT_CENTERED);
-	nk_text(ctx, (currentRadioSelection == 0) ? "^7Mind Worm Radio" : "Mind Worm Radio", strlen((currentRadioSelection == 0) ? "^7Mind Worm Radio" : "Mind Worm Radio"), NK_TEXT_CENTERED);
-	nk_text(ctx, (currentRadioSelection == 0) ? "^7Relaxing In The Rim" : "Relaxing In The Rim", strlen((currentRadioSelection == 0) ? "^7Relaxing In The Rim" : "Relaxing In The Rim"), NK_TEXT_CENTERED);
+	nk_text(ctx, "Galactic Radio", strlen("Galactic Radio"), NK_TEXT_CENTERED);
+	nk_text(ctx, "Mind Worm Radio", strlen("Mind Worm Radio"), NK_TEXT_CENTERED);
+	nk_text(ctx, "Relaxing In The Rim", strlen("Relaxing In The Rim"), NK_TEXT_CENTERED);
 	if (strlen(RADIO_CUSTOM_STATION_NAME) > 0)
 	{
-		nk_text(ctx, (currentRadioSelection == 0) ? va("^7%s", RADIO_CUSTOM_STATION_NAME) : RADIO_CUSTOM_STATION_NAME, strlen((currentRadioSelection == 0) ? va("^7%s", RADIO_CUSTOM_STATION_NAME) : RADIO_CUSTOM_STATION_NAME), NK_TEXT_CENTERED);
+		nk_text(ctx, RADIO_CUSTOM_STATION_NAME, strlen(RADIO_CUSTOM_STATION_NAME), NK_TEXT_CENTERED);
+		nk_text(ctx,  "Custom Radio", strlen("Custom Radio"), NK_TEXT_CENTERED);
+		nk_text(ctx, "Radio Off", strlen("Radio Off"), NK_TEXT_CENTERED);
 	}
-	nk_text(ctx, (currentRadioSelection == 0) ? "^7Custom Radio" : "^7Custom Radio", strlen((currentRadioSelection == 0) ? "^7Custom Radio" : "^7Custom Radio"), NK_TEXT_CENTERED);
+	else
+	{
+		nk_text(ctx, "Custom Radio", strlen("Custom Radio"), NK_TEXT_CENTERED);
+		nk_text(ctx, "Radio Off", strlen("Radio Off"), NK_TEXT_CENTERED);
+	}
 	//
+
+	if (strlen(RADIO_CUSTOM_STATION_NAME) > 0)
+		nk_layout_row_static(ctx, 28, 96, 6);
+	else
+		nk_layout_row_static(ctx, 28, 96, 5);
 
 	nk_style_set_font(ctx, &media->font_14->handle);
 	nk_end(ctx);
@@ -1519,8 +1583,13 @@ GUI_Inventory(struct nk_context *ctx, struct media *media)
 			selected_image = i;
 			image_active = 0;
 		}
-
-		if ((ctx->last_widget_state & NK_WIDGET_STATE_HOVER))
+		
+		if (keyStatus[A_MOUSE1])
+		{
+			tooltipNum = PREVIOUS_INVENTORY_TOOLTIP = -1;
+			tooltipQuality = PREVIOUS_INVENTORY_TOOLTIP_QUALITY = 0;
+		}
+		else if ((ctx->last_widget_state & NK_WIDGET_STATE_HOVER))
 		{// Hoverred...
 			tooltipNum = i;
 			tooltipQuality = quality;
@@ -1807,7 +1876,7 @@ void RE_RenderImGui() {
 	// copy over all keys to imgui
 	ImGuiIO& io = ImGui::GetIO();
 	for (int i=0; i<MAX_KEYS; i++)
-		io.KeysDown[i] = keyStatus[i];
+		io.KeysDown[i] = (keyStatus[i] == qtrue);
 
 	// Read keyboard modifiers inputs
 	io.KeyCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
@@ -2637,7 +2706,7 @@ void NuklearUI_Main(void)
 			grid_demo(&GUI_ctx, &GUI_media);
 #endif
 
-			GUI_Inventory(&GUI_ctx, &GUI_media);
+			//GUI_Inventory(&GUI_ctx, &GUI_media);
 			//GUI_Settings(&GUI_ctx, &GUI_media);
 			GUI_Radio(&GUI_ctx, &GUI_media);
 		}

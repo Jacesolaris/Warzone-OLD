@@ -937,7 +937,20 @@ void BASS_StartMusic ( DWORD samplechan )
 		BASS_ChannelPlay(samplechan,FALSE);
 
 	// Apply the 3D settings (music is always local)...
+	// Set velocity to 0...
+	MUSIC_CHANNEL.vel.x = 0;
+	MUSIC_CHANNEL.vel.y = 0;
+	MUSIC_CHANNEL.vel.z = 0;
+		
+	// Set origin to 0...
+	MUSIC_CHANNEL.pos.x = 0;
+	MUSIC_CHANNEL.pos.y = 0;
+	MUSIC_CHANNEL.pos.z = 0;
+	BASS_ChannelSet3DPosition(MUSIC_CHANNEL.channel, &MUSIC_CHANNEL.pos, NULL, &MUSIC_CHANNEL.vel);
+
+	float CHAN_VOLUME = MUSIC_CHANNEL.volume*BASS_GetVolumeForChannel(MUSIC_CHANNEL.entityChannel);
 	BASS_ChannelSet3DAttributes(MUSIC_CHANNEL.channel, SOUND_3D_METHOD, -1, -1, -1, -1, -1);
+	BASS_ChannelSetAttribute(MUSIC_CHANNEL.channel, BASS_ATTRIB_VOL, CHAN_VOLUME);
 	BASS_Apply3D();
 
 	BASS_MUSIC_STARTING = qfalse;
@@ -1495,22 +1508,16 @@ void BASS_AddDynamicTrack ( char *name )
 		return;
 	}
 
-	if (s_musicSelection->integer == 1 || s_musicSelection->integer == 2) return; // Not in these modes...
-
-	//if (s_musicSelection->integer == 1 || s_musicSelection->integer == 2)
-	//{// Don't add map tracks if we are using psy or custom playlist... (but allow it for *all* mode)
-	//	return;
-	//}
+	if (CURRENT_MUSIC_SELECTION >= 1)
+	{// Don't add map tracks if we are using non-jka radio tracks...
+		return;
+	}
 
 	if (MUSIC_LIST_UPDATING) return; // wait...
 
 	if (MUSIC_LIST_COUNT >= MAX_DYNAMIC_LIST) return; // Hit MAX allowed number...
 
 	int NUM_TRACKS = GALACTIC_RADIO_TRACKS_NUM;
-
-	//if (s_musicSelection->integer == 1) NUM_TRACKS = MINDWORM_TRACKS_NUM;
-	//if (s_musicSelection->integer == 2) NUM_TRACKS = CUSTOM_TRACKS_NUM;
-	if (s_musicSelection->integer == 3) NUM_TRACKS = GALACTIC_RADIO_TRACKS_NUM + MINDWORM_TRACKS_NUM + CUSTOM_TRACKS_NUM;
 
 	for (int i = MUSIC_LIST_COUNT-1; i >= NUM_TRACKS; i--)
 	{// Reverse check because "extra" music will always be at the end of the list :)
@@ -1603,7 +1610,7 @@ void BASS_InitDynamicList ( void )
 
 	BASS_MusicPlayedInit();
 
-	if (s_musicSelection->integer == 1)
+	if (CURRENT_MUSIC_SELECTION == 1)
 	{// Add all known "Mind Worm Radio" tracks to the list...
 		BASS_GetMindWormTracks();
 
@@ -1613,7 +1620,7 @@ void BASS_InitDynamicList ( void )
 			MUSIC_LIST_COUNT++;
 		}
 	}
-	else if (s_musicSelection->integer == 2)
+	else if (CURRENT_MUSIC_SELECTION == 2)
 	{// Add all known "Relaxing In The Rim Radio" tracks to the list...
 		BASS_GetRelaxingTracks();
 
@@ -1623,7 +1630,7 @@ void BASS_InitDynamicList ( void )
 			MUSIC_LIST_COUNT++;
 		}
 	}
-	else if (s_musicSelection->integer == 3)
+	else if (CURRENT_MUSIC_SELECTION == 3)
 	{// Add all map station tracks...
 		BASS_GetMapStationTracks();
 
@@ -1633,7 +1640,7 @@ void BASS_InitDynamicList ( void )
 			MUSIC_LIST_COUNT++;
 		}
 	}
-	else if (s_musicSelection->integer == 4)
+	else if (CURRENT_MUSIC_SELECTION == 4)
 	{// Add all known CUSTOM tracks to the list...
 		BASS_GetCustomTracks();
 
@@ -1642,6 +1649,20 @@ void BASS_InitDynamicList ( void )
 			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, CUSTOM_TRACKS[i].name);
 			MUSIC_LIST_COUNT++;
 		}
+
+		if (MUSIC_LIST_COUNT <= 0)
+		{// No tracks in custom dir, turn the radio off...
+			Cvar_Set("s_musicSelection", "5");
+			MUSIC_LIST_INITIALIZED = qtrue;
+			MUSIC_LIST_UPDATING = qfalse;
+			return;
+		}
+	}
+	else if (CURRENT_MUSIC_SELECTION == 5)
+	{// Radio is off...
+		MUSIC_LIST_INITIALIZED = qtrue;
+		MUSIC_LIST_UPDATING = qfalse;
+		return;
 	}
 	else
 	{// Add all known "Galactic Radio" tracks to the list...
@@ -1748,6 +1769,8 @@ void BASS_StartStreamingMusic(char *filename)
 
 	if (BASS_CheckSoundDisabled()) return;
 
+	if (CURRENT_MUSIC_SELECTION == 5) return;
+
 	if (!strncmp(filename, "http", 4))
 	{// http request...
 	 //Com_Printf("Playing [HTTP] stream %s.\n", filename);
@@ -1819,6 +1842,17 @@ void BASS_MusicUpdateThread( void * aArg )
 		BASS_InitDynamicList(); // check if we have initialized the list yet...
 
 		if (!MUSIC_LIST_INITIALIZED) return;
+
+		if (CURRENT_MUSIC_SELECTION == 5)
+		{// Radio is off. Turn off anything playing, and just wait...
+			if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
+			{// Still playing a track...
+				BASS_StopMusic(MUSIC_CHANNEL.channel);
+			}
+
+			this_thread::sleep_for(chrono::milliseconds(1000));
+			continue;
+		}
 
 		if (s_volumeMusic->value <= 0)
 		{// wait...
@@ -1906,6 +1940,7 @@ void BASS_UpdateDynamicMusic( void )
 {
 	if (!BASS_UPDATE_THREAD_RUNNING) return; // wait...
 	if (!BASS_INITIALIZED) return; // wait...
+	if (CURRENT_MUSIC_SELECTION == 5) return;
 
 	if ( thread::hardware_concurrency() > 1 )
 	{

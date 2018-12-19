@@ -2829,6 +2829,8 @@ typedef struct trGlobals_s {
 	image_t					*greyImage;				// full of 0x77
 	image_t					*greyCube;				// cubemap full of 0x77
 	image_t					*identityLightImage;	// full of tr.identityLightByte
+	image_t					*envmapImage;			// generic envmap
+	image_t					*envmapSpecImage;		// generic envmap_spec
 
 	//image_t					*previousRenderImage;
 	image_t					*randomImage;

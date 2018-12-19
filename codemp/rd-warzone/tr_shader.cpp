@@ -1841,6 +1841,16 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				//UQ1: END - Testing - Force glow to obvious glow components...
 				continue;
 			}
+			else if (!Q_stricmp(token, "envmap") || !Q_stricmp(token, "$envmap"))
+			{
+				stage->bundle[0].image[0] = tr.envmapImage;
+				continue;
+			}
+			else if (!Q_stricmp(token, "envmap_spec") || !Q_stricmp(token, "$envmap_spec"))
+			{
+				stage->bundle[0].image[0] = tr.envmapSpecImage;
+				continue;
+			}
 			else
 			{
 				imgType_t type = IMGTYPE_COLORALPHA;

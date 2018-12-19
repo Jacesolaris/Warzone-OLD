@@ -725,7 +725,21 @@ Tests if path and file exists
 */
 qboolean FS_FileInPathExists(const char *testpath)
 {
-#if 0
+#if 1
+	struct stat buffer;
+	if (stat(testpath, &buffer) == 0) return qtrue;
+
+	fileHandle_t filep = NULL;
+	FS_FOpenFileRead(testpath, &filep, qtrue);
+
+	if (filep)
+	{
+		FS_FCloseFile(filep);
+		return qtrue;
+	}
+
+	return qfalse;
+#elif 0
 	FILE *filep;
 
 	filep = fopen(testpath, "rb");
@@ -758,17 +772,26 @@ NOTE TTimo: this goes with FS_FOpenFileWrite for opening the file afterwards
 */
 qboolean FS_FileExists( const char *file )
 {
+#if 1
+	if (FS_FileInPathExists(file))
+		return qtrue;
+
 	if (FS_FileInPathExists(FS_BuildOSPath(fs_basepath->string, fs_gamedir, file))) 
 		return qtrue;
 
 	if (FS_FileInPathExists(FS_BuildOSPath(fs_homepath->string, fs_gamedir, file)))
 		return qtrue;
 
-	int nChkSum1 = 0;
-	if (FS_FileIsInPAK(file, &nChkSum1))
-		return qtrue;
+	#if 0
+		int nChkSum1 = 0;
+		if (FS_FileIsInPAK(file, &nChkSum1))
+			return qtrue;
+	#endif
 
 	return qfalse;
+#else
+	return FS_FileInPathExists(FS_BuildOSPath(fs_homepath->string, fs_gamedir, file));
+#endif
 }
 
 /*

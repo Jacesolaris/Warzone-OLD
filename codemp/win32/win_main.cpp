@@ -976,6 +976,11 @@ int main( int argc, char **argv )
 	QuickMemTest();
 #endif
 
+#ifdef _WIN32
+	// UQ1: Shut up vista+  and your not responding window bs... The game is simply busy!!!
+	DisableProcessWindowsGhosting();
+#endif //_WIN32
+
 	NET_Init();
 
 	// hide the early console since we've reached the point where we
