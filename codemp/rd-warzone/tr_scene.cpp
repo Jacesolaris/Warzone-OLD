@@ -94,6 +94,8 @@ void Indoors_Trace(trace_t *results, const vec3_t start, const vec3_t mins, cons
 
 void R_CheckIfOutside(void)
 {
+	if (!tr.worldLoaded) return;
+
 	const float outside_check_max_height = 4096.0;// 524288.0;
 //#ifndef __INDOOR_SHADOWS__
 //	if (!ENABLE_INDOOR_OUTDOOR_SYSTEM) return;
