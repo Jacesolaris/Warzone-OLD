@@ -870,6 +870,7 @@ void CM_TraceThroughPatch( traceWork_t *tw, trace_t &trace, cPatch_t *patch ) {
 		trace.surfaceFlags = patch->surfaceFlags;
 		trace.contents = patch->contents;
 		trace.materialType = patch->materialType;
+		trace.shaderName = NULL;
 	}
 }
 
@@ -1042,6 +1043,7 @@ void CM_TraceThroughBrush( traceWork_t *tw, trace_t &trace, cbrush_t *brush, boo
 				trace.surfaceFlags = cmg.shaders[tw->leadside->shaderNum].surfaceFlags;
 				trace.contents = brush->contents;
 				trace.materialType = cmg.shaders[tw->leadside->shaderNum].materialType;
+				trace.shaderName = cmg.shaders[tw->leadside->shaderNum].shader;
 			}
 		}
 	}

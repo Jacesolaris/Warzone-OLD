@@ -4227,6 +4227,18 @@ void CG_ShowForwardSurface ( void )
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_ALL);//MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
 
 	//
+	// Shader Names
+	//
+	if (tr.shaderName != NULL)
+	{
+		trap->Print("Shader: %s.\n", tr.shaderName);
+	}
+	else
+	{
+		trap->Print("Shader: UNKNOWN.\n");
+	}
+
+	//
 	// Surface
 	//
 
@@ -4385,6 +4397,18 @@ void CG_ShowSurface ( void )
 
 	// Do forward test...
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_ALL);//MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
+
+	//
+	// Shader Names
+	//
+	if (tr.shaderName != NULL)
+	{
+		trap->Print("Shader: %s.\n", tr.shaderName);
+	}
+	else
+	{
+		trap->Print("Shader: UNKNOWN.\n");
+	}
 
 	//
 	// Surface

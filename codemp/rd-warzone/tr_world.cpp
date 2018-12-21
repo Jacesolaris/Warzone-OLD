@@ -480,7 +480,7 @@ static int R_PshadowSurface(msurface_t *surf, int pshadowBits) {
 R_AddWorldSurface
 ======================
 */
-static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, int pshadowBits, qboolean dontCache) {
+/*static*/ void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, int pshadowBits, qboolean dontCache) {
 	// FIXME: bmodel fog?
 	int cubemapIndex = 0;
 

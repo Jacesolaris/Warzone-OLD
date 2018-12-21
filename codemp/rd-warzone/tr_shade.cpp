@@ -1662,8 +1662,8 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 
 		vec4_t local4;
 		float dayNightGlowFactor = mix(MAP_GLOW_MULTIPLIER, MAP_GLOW_MULTIPLIER_NIGHT, RB_NightScale());
-		float glowPower = (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * tess.shader->glowStrength * 2.858 * dayNightGlowFactor : r_glowStrength->value * tess.shader->glowStrength * 2.0;
-		VectorSet4(local4, (float)stageNum, glowPower, r_showsplat->value, tess.shader->glowVibrancy * r_glowVibrancy->value);
+		float glowPower = (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * tess.shader->glowStrength * 2.858 * dayNightGlowFactor * pStage->glowStrength : r_glowStrength->value * tess.shader->glowStrength * pStage->glowStrength * 2.0;
+		VectorSet4(local4, (float)stageNum, glowPower, r_showsplat->value, tess.shader->glowVibrancy * pStage->glowVibrancy * r_glowVibrancy->value);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
 
 		vec4_t local5;

@@ -1271,6 +1271,10 @@ typedef struct {
 	float			emissiveHeightScale;
 	float			emissiveConeAngle;
 
+	float			glowStrength;
+	float			glowVibrancy;
+	qboolean		glowNoMerge;
+
 	vec3_t			particleColor;
 
 	vec3_t			portalColor1;

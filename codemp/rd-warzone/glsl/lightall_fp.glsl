@@ -621,7 +621,11 @@ void main()
 	}
 	else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
 	{
-
+		//gl_FragColor.a *= u_Local9.r;
+	}
+	else if (SHADER_MATERIAL_TYPE == MATERIAL_GLASS)
+	{
+		//gl_FragColor.a *= u_Local9.r;
 	}
 	else
 	{
@@ -647,6 +651,15 @@ void main()
 			colStr = clamp(colStr - 0.1, 0.0, 1.0);
 			gl_FragColor.a = colStr;
 		}
+	}
+
+	if (SHADER_MATERIAL_TYPE == MATERIAL_GLASS && USE_IS2D <= 0.0)
+	{
+		gl_FragColor *= 6.0;
+	}
+	else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX && USE_IS2D <= 0.0)
+	{
+		gl_FragColor *= 2.0;
 	}
 
 	gl_FragColor.a = clamp(gl_FragColor.a, 0.0, 1.0);
@@ -830,7 +843,7 @@ void main()
 				out_NormalDetail = vec4(0.0);
 	#endif //__USE_REAL_NORMALMAPS__
 		}
-		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
+		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX || SHADER_MATERIAL_TYPE == MATERIAL_GLASS)
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
@@ -887,7 +900,7 @@ void main()
 				out_NormalDetail = vec4(0.0);
 	#endif //__USE_REAL_NORMALMAPS__
 		}
-		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
+		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX || SHADER_MATERIAL_TYPE == MATERIAL_GLASS)
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
@@ -924,7 +937,7 @@ void main()
 				out_NormalDetail = vec4(0.0);
 	#endif //__USE_REAL_NORMALMAPS__
 		}
-		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
+		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX || SHADER_MATERIAL_TYPE == MATERIAL_GLASS)
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);

@@ -1370,6 +1370,7 @@ typedef struct trace_s {
 	int			surfaceFlags;	// surface hit
 	int			contents;	// contents on other side of surface hit
 	int			materialType;
+	char		*shaderName;
 
 /*
 Ghoul2 Insert Start

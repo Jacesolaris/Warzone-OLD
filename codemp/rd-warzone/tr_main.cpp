@@ -2961,6 +2961,116 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 				dest->flags |= VPF_FARPLANEFRUSTUM;
 			}
 
+//#define __PSHADOWS_ADD_WORLD__
+#ifdef __PSHADOWS_ADD_WORLD__
+			extern void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, int pshadowBits, qboolean dontCache);
+
+			/*vec3_t lightviewBounds[2];
+			//VectorSet(lightviewBounds[0], shadow->realLightOrigin[0] - shadow->lightRadius, shadow->realLightOrigin[1] - shadow->lightRadius, shadow->realLightOrigin[2] - shadow->lightRadius);
+			//VectorSet(lightviewBounds[1], shadow->realLightOrigin[0] + shadow->lightRadius, shadow->realLightOrigin[1] + shadow->lightRadius, shadow->realLightOrigin[2] + shadow->lightRadius);
+			matrix_t lightViewMatrix;
+			vec4_t point, base, lightViewPoint;
+			float lx, ly;
+
+			base[3] = 1;
+			point[3] = 1;
+			lightViewPoint[3] = 1;
+
+			Matrix16View(shadow->lightViewAxis, shadow->lightOrigin, lightViewMatrix);
+
+			ClearBounds(lightviewBounds[0], lightviewBounds[1]);
+
+			float splitZNear = 1.0;
+
+			// add view near plane
+			lx = splitZNear * tan(fd->fov_x * M_PI / 360.0f);
+			ly = splitZNear * tan(fd->fov_y * M_PI / 360.0f);
+			VectorMA(fd->vieworg, splitZNear, fd->viewaxis[0], base);
+
+			VectorMA(base, lx, fd->viewaxis[1], point);
+			VectorMA(point, ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			VectorMA(base, -lx, fd->viewaxis[1], point);
+			VectorMA(point, ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			VectorMA(base, lx, fd->viewaxis[1], point);
+			VectorMA(point, -ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			VectorMA(base, -lx, fd->viewaxis[1], point);
+			VectorMA(point, -ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+
+			// add view far plane
+			float splitZFar = shadow->viewRadius;
+
+			lx = splitZFar * tan(fd->fov_x * M_PI / 360.0f);
+			ly = splitZFar * tan(fd->fov_y * M_PI / 360.0f);
+			VectorMA(fd->vieworg, splitZFar, fd->viewaxis[0], base);
+
+			VectorMA(base, lx, fd->viewaxis[1], point);
+			VectorMA(point, ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			VectorMA(base, -lx, fd->viewaxis[1], point);
+			VectorMA(point, ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			VectorMA(base, lx, fd->viewaxis[1], point);
+			VectorMA(point, -ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			VectorMA(base, -lx, fd->viewaxis[1], point);
+			VectorMA(point, -ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			R_SetupProjectionOrtho(&tr.viewParms, lightviewBounds);*/
+
+			//float origZfar = tr.viewParms.zFar;
+			//tr.viewParms.zFar = shadow->lightRadius * 2.0;
+			
+			//R_AddWorldSurfaces();
+			for (i = 0; i < tr.world->numWorldSurfaces; i++)
+			{
+				//if (tr.world->surfacesViewCount[i] != tr.viewCount)
+				//	continue;
+
+				if (!(tr.world->surfaces + i)->isMerged)
+				{
+					//R_AddWorldSurface(tr.world->surfaces + i, tr.currentEntityNum, 0, tr.world->surfacesPshadowBits[i], qtrue);
+
+					R_AddDrawSurf((tr.world->surfaces + i)->data, (tr.world->surfaces + i)->shader,
+						0,
+						0, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
+				}
+			}
+
+			for (i = 0; i < tr.world->numMergedSurfaces; i++)
+			{
+				//if (tr.world->mergedSurfacesViewCount[i] != tr.viewCount)
+				//	continue;
+
+				//R_AddWorldSurface(tr.world->mergedSurfaces + i, tr.currentEntityNum, 0, tr.world->mergedSurfacesPshadowBits[i], qtrue);
+
+				R_AddDrawSurf((tr.world->mergedSurfaces + i)->data, (tr.world->mergedSurfaces + i)->shader,
+					0,
+					0, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
+			}
+
+			//tr.viewParms.zFar = origZfar;
+#endif //__PSHADOWS_ADD_WORLD__
+
 			for (j = 0; j < shadow->numEntities && j < 8; j++)
 			{
 				R_AddEntitySurface(shadow->entityNums[j]);

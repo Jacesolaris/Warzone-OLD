@@ -1261,22 +1261,6 @@ qboolean ForceGlow2 ( char *shader )
 	{
 		return qtrue;
 	}
-	/*else if (StringContains(shader, "light", 0) && !StringContains(shader, "lightmap", 0))
-	{
-		return qtrue;
-	}*/
-	/*else if (StringContains(shader, "lightglow", 0))
-	{
-		return qtrue;
-	}
-	else if (StringContains(shader, "light_glw", 0))
-	{
-		return qtrue;
-	}
-	else if (StringContains(shader, "light_glow", 0))
-	{
-		return qtrue;
-	}*/
 	else if (StringContains(shader, "street_light", 0))
 	{
 		return qtrue;
@@ -1297,10 +1281,10 @@ qboolean ForceGlow2 ( char *shader )
 	{
 		return qtrue;
 	}
-	else if (StringContains(shader, "blend", 0))
+	/*else if (StringContains(shader, "blend", 0))
 	{
 		return qtrue;
-	}
+	}*/
 	else if (StringContains(shader, "onoffr", 0))
 	{
 		return qtrue;
@@ -1373,10 +1357,10 @@ qboolean ForceGlow2 ( char *shader )
 	{
 		return qtrue;
 	}
-	else if (StringContains(shader, "_red", 0))
+	/*else if (StringContains(shader, "_red", 0))
 	{
 		return qtrue;
-	}
+	}*/
 	else if (StringContains(shader, "static_field3", 0))
 	{
 		return qtrue;
@@ -1510,6 +1494,22 @@ qboolean ForceGlow2 ( char *shader )
 		return qtrue;
 	}
 	else if (StringContains(shader, "_blend", 0) && StringContains(shader, "step", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "blue", 0) && StringContains(shader, "light", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "red", 0) && StringContains(shader, "light", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "green", 0) && StringContains(shader, "light", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "yellow", 0) && StringContains(shader, "light", 0))
 	{
 		return qtrue;
 	}
@@ -1729,6 +1729,10 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 	stage->portalImageColor[2] = 1.0;
 	stage->portalImageAlpha = 1.0;
 
+	stage->glowStrength = 1.0;
+	stage->glowVibrancy = 1.0;
+	stage->glowNoMerge = qfalse;
+
 	while ( 1 )
 	{
 		token = COM_ParseExt( text, qtrue );
@@ -1786,7 +1790,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				}
 
 				// UQ1: Testing - Force glow to obvious glow components...
-				if (ForceGlow(stage->bundle[0].image[0]->imgName))
+				/*if (ForceGlow(stage->bundle[0].image[0]->imgName))
 				{
 					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
@@ -1796,7 +1800,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 					if (stage->emissiveColorScale <= 0.0)
 						stage->emissiveColorScale = 1.5;
-				}
+				}*/
 				//UQ1: END - Testing - Force glow to obvious glow components...
 
 				stage->noScreenMap = qtrue;
@@ -1824,7 +1828,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				}
 
 				// UQ1: Testing - Force glow to obvious glow components...
-				if (ForceGlow(stage->bundle[0].image[0]->imgName))
+				/*if (ForceGlow(stage->bundle[0].image[0]->imgName))
 				{
 					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
@@ -1834,7 +1838,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 					if (stage->emissiveColorScale <= 0.0)
 						stage->emissiveColorScale = 1.5;
-				}
+				}*/
 
 				stage->noScreenMap = qtrue;
 
@@ -1923,7 +1927,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 						flags |= IMGFLAG_SRGB;
 				}
 
-				if (ForceGlow(token) || stage->glow)
+				if (/*ForceGlow(token) ||*/ stage->glow)
 				{
 					flags |= IMGFLAG_GLOW;
 				}
@@ -1946,6 +1950,21 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 #else //!__DEFERRED_IMAGE_LOADING__
 					stage->bundle[TB_GLOWMAP].image[0] = R_FindImageFile(imgname, type, (flags & IMGFLAG_GLOW) ? flags : (flags | IMGFLAG_GLOW));
 #endif //__DEFERRED_IMAGE_LOADING__
+
+					/*if (!stage->bundle[TB_GLOWMAP].image[0] || stage->bundle[TB_GLOWMAP].image[0] == tr.defaultImage)
+					{
+						stippedName[0] = 0;
+						COM_StripExtension(token, stippedName, sizeof(stippedName));
+						sprintf(imgname, "%s_blend", stippedName);
+
+#ifdef __DEFERRED_IMAGE_LOADING__
+						stage->bundle[TB_GLOWMAP].image[0] = R_DeferImageLoad(imgname, type, flags | IMGFLAG_GLOW);
+#else //!__DEFERRED_IMAGE_LOADING__
+						stage->bundle[TB_GLOWMAP].image[0] = R_FindImageFile(imgname, type, (flags & IMGFLAG_GLOW) ? flags : (flags | IMGFLAG_GLOW));
+#endif //__DEFERRED_IMAGE_LOADING__
+
+						stage->glowStrength *= 0.5;
+					}*/
 				}
 
 				if (stage->bundle[TB_GLOWMAP].image[0]
@@ -2045,7 +2064,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 
-			if (ForceGlow(token) || stage->glow)
+			if (/*ForceGlow(token) ||*/ stage->glow)
 			{
 				flags |= IMGFLAG_GLOW;
 			}
@@ -2068,6 +2087,21 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 #else //!__DEFERRED_IMAGE_LOADING__
 				stage->bundle[TB_GLOWMAP].image[0] = R_FindImageFile(imgname, type, (flags & IMGFLAG_GLOW) ? flags : (flags | IMGFLAG_GLOW));
 #endif //__DEFERRED_IMAGE_LOADING__
+
+				/*if (!stage->bundle[TB_GLOWMAP].image[0] || stage->bundle[TB_GLOWMAP].image[0] == tr.defaultImage)
+				{
+					stippedName[0] = 0;
+					COM_StripExtension(token, stippedName, sizeof(stippedName));
+					sprintf(imgname, "%s_blend", stippedName);
+
+#ifdef __DEFERRED_IMAGE_LOADING__
+					stage->bundle[TB_GLOWMAP].image[0] = R_DeferImageLoad(imgname, type, flags | IMGFLAG_GLOW);
+#else //!__DEFERRED_IMAGE_LOADING__
+					stage->bundle[TB_GLOWMAP].image[0] = R_FindImageFile(imgname, type, (flags & IMGFLAG_GLOW) ? flags : (flags | IMGFLAG_GLOW));
+#endif //__DEFERRED_IMAGE_LOADING__
+
+					stage->glowStrength *= 0.5;
+				}*/
 			}
 
 			if (stage->bundle[TB_GLOWMAP].image[0]
@@ -2159,7 +2193,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 #endif //__DEFERRED_IMAGE_LOADING__
 
 					// UQ1: Testing - Force glow to obvious glow components...
-					if (ForceGlow(stage->bundle[0].image[num]->imgName))
+					/*if (ForceGlow(stage->bundle[0].image[num]->imgName))
 					{
 						//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[num]->imgName);
 						stage->glow = qtrue;
@@ -2169,7 +2203,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 						if (stage->emissiveColorScale <= 0.0)
 							stage->emissiveColorScale = 1.5;
-					}
+					}*/
 					//UQ1: END - Testing - Force glow to obvious glow components...
 
 					if ( !stage->bundle[0].image[num] )
@@ -2839,6 +2873,35 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			stage->emissiveHeightScale = 0.0;
 			stage->emissiveConeAngle = 0.0;
 
+			continue;
+		}
+		else if (!Q_stricmp(token, "glowStrength"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (!token[0])
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parm for 'glowStrength' keyword in shader '%s'\n", shader.name);
+				stage->glowStrength = 1.0;
+				continue;
+			}
+			stage->glowStrength = atof(token);
+			continue;
+		}
+		else if (!Q_stricmp(token, "glowVibrancy"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (!token[0])
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parm for 'glowVibrancy' keyword in shader '%s'\n", shader.name);
+				stage->glowVibrancy = 1.0;
+				continue;
+			}
+			stage->glowVibrancy = atof(token);
+			continue;
+		}
+		else if (!Q_stricmp(token, "glowNoMerge"))
+		{
+			stage->glowNoMerge = qtrue;
 			continue;
 		}
 		else if (!Q_stricmp(token, "isFoliage"))
@@ -6386,6 +6449,37 @@ static int CollapseStagesToGLSL(void)
 		}
 	}
 
+	if (!skip)
+	{
+		for (i = 0; i < MAX_SHADER_STAGES; i++)
+		{// Add any glows we see that were not marked as glow...
+			shaderStage_t *pStage = &stages[i];
+
+			if (!pStage->active)
+				continue;
+
+			if (pStage->glow)
+				continue;
+
+			if (pStage->bundle[TB_DIFFUSEMAP].image[0] && pStage->bundle[TB_DIFFUSEMAP].image[0] != tr.defaultImage)
+			{
+				if (ForceGlow(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName))
+				{
+					pStage->glow = qtrue;
+					pStage->glowStrength = 1.0;
+					shader.glowStrength = max(pStage->glowStrength, shader.glowStrength);
+					shader.hasGlow = qtrue;
+
+					if (StringContains(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "_blend", 0) && StringContains(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "strip", 0))
+					{
+						pStage->glowStrength = 2.0;
+						shader.glowStrength = max(pStage->glowStrength, shader.glowStrength);
+					}
+				}
+			}
+		}
+	}
+
 #ifdef __MERGE_GLOW_STAGES__
 	if (!skip)
 	{
@@ -6492,6 +6586,9 @@ static int CollapseStagesToGLSL(void)
 					shaderStage_t *pStage = &stages[i];
 
 					if (!pStage->active)
+						continue;
+
+					if (pStage->glowNoMerge)
 						continue;
 
 					if (pStage->glow && pStage->bundle[TB_DIFFUSEMAP].image[0])
@@ -8758,7 +8855,8 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 
 	if (!Q_stricmp(strippedName, "textures/system")
 		|| StringContainsWord(strippedName, "nodraw_solid")
-		|| StringContainsWord(strippedName, "collision"))
+		|| StringContainsWord(strippedName, "collision")
+		/*|| StringContainsWord(strippedName, "textures/common")*/)
 	{
 		forceShaderFileUsage = qtrue;
 	}
