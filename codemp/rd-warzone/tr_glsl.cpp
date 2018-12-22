@@ -1883,6 +1883,7 @@ int GLSL_EnqueueCompileGPUShader(GLuint program, GLuint *prevShader, const GLcha
 int GLSL_LoadGPUShaderText(const char *name, const char *fallback,
 	GLenum shaderType, char *dest, int destSize)
 {
+#if 0
 	char            filename[128/*MAX_QPATH*/];
 	GLcharARB      *buffer = NULL;
 	const GLcharARB *shaderText = NULL;
@@ -1945,6 +1946,12 @@ int GLSL_LoadGPUShaderText(const char *name, const char *fallback,
 	{
 		ri->FS_FreeFile(buffer);
 	}
+#else
+	int             result = 1;
+	const GLcharARB *shaderText = fallback;
+	int size = strlen(shaderText);
+	Q_strncpyz(dest, shaderText, size + 1);
+#endif
 
 	return result;
 }
@@ -2574,7 +2581,9 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 	char *postHeader;
 	int size;
 
-	//ri->Printf(PRINT_WARNING, "Begin GLSL load for %s.\n", name);
+#ifdef __DEBUG_SHADER_LOAD__
+	ri->Printf(PRINT_WARNING, "Begin GLSL load for %s.\n", name);
+#endif //__DEBUG_SHADER_LOAD__
 
 	size = sizeof(vpCode);
 	if (addHeader)
@@ -2590,6 +2599,9 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 
 	if (!GLSL_LoadGPUShaderText(name, fallback_vp, GL_VERTEX_SHADER, postHeader, size))
 	{
+#ifdef __DEBUG_SHADER_LOAD__
+		ri->Printf(PRINT_WARNING, "GLSL_LoadGPUShaderText for %s_vp.\n", name);
+#endif //__DEBUG_SHADER_LOAD__
 		return 0;
 	}
 
@@ -2611,6 +2623,9 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 
 		if (!GLSL_LoadGPUShaderText(name, fallback_cp, GL_TESS_CONTROL_SHADER, postHeader, size))
 		{
+#ifdef __DEBUG_SHADER_LOAD__
+			ri->Printf(PRINT_WARNING, "GLSL_LoadGPUShaderText for %s_cp.\n", name);
+#endif //__DEBUG_SHADER_LOAD__
 			return 0;
 		}
 	}
@@ -2633,6 +2648,9 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 
 		if (!GLSL_LoadGPUShaderText(name, fallback_ep, GL_TESS_EVALUATION_SHADER, postHeader, size))
 		{
+#ifdef __DEBUG_SHADER_LOAD__
+			ri->Printf(PRINT_WARNING, "GLSL_LoadGPUShaderText for %s_ep.\n", name);
+#endif //__DEBUG_SHADER_LOAD__
 			return 0;
 		}
 	}
@@ -2655,6 +2673,9 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 
 		if (!GLSL_LoadGPUShaderText(name, fallback_gs, GL_GEOMETRY_SHADER, postHeader, size))
 		{
+#ifdef __DEBUG_SHADER_LOAD__
+			ri->Printf(PRINT_WARNING, "GLSL_LoadGPUShaderText for %s_gs.\n", name);
+#endif //__DEBUG_SHADER_LOAD__
 			return 0;
 		}
 	}
@@ -2675,6 +2696,9 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 
 		if (!GLSL_LoadGPUShaderText(name, fallback_fp, GL_FRAGMENT_SHADER, postHeader, size))
 		{
+#ifdef __DEBUG_SHADER_LOAD__
+			ri->Printf(PRINT_WARNING, "GLSL_LoadGPUShaderText for %s_fp.\n", name);
+#endif //__DEBUG_SHADER_LOAD__
 			return 0;
 		}
 	}
