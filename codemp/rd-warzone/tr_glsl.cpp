@@ -1884,6 +1884,7 @@ int GLSL_LoadGPUShaderText(const char *name, const char *fallback,
 	GLenum shaderType, char *dest, int destSize)
 {
 #if 0
+	// UQ1: yeah, don't need this crap.. trying to load a text file into a buffer that may be smaller? dumb!
 	char            filename[128/*MAX_QPATH*/];
 	GLcharARB      *buffer = NULL;
 	const GLcharARB *shaderText = NULL;
@@ -1913,7 +1914,7 @@ int GLSL_LoadGPUShaderText(const char *name, const char *fallback,
 
 	ri->Printf(PRINT_DEVELOPER, "...loading '%s'\n", filename);
 	size = ri->FS_ReadFile(filename, (void **)&buffer);
-	if (!buffer)
+	if (!buffer || buffer[0] == 0)
 	{
 		if (fallback)
 		{
