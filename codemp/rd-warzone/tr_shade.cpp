@@ -1000,7 +1000,7 @@ static void ProjectPshadowVBOGLSL( void ) {
 		if (TERRAIN_TESSELLATION_ENABLED
 			&& r_terrainTessellation->integer
 			&& r_terrainTessellationMax->value >= 2.0
-			&& (r_foliage->integer && GRASS_ENABLED && (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType))))
+			&& (/*r_foliage->integer && GRASS_ENABLED &&*/ (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType))))
 		{// Always add tesselation to ground surfaces...
 			tess.shader->tesselation = qfalse;
 
@@ -1099,7 +1099,7 @@ static void ProjectPshadowVBOGLSL( void ) {
 		if (TERRAIN_TESSELLATION_ENABLED
 			&& r_terrainTessellation->integer
 			&& r_terrainTessellationMax->value >= 2.0
-			&& (r_foliage->integer && GRASS_ENABLED && (input->shader->isGrass || RB_ShouldUseGeometryGrass(input->shader->materialType))))
+			&& (/*r_foliage->integer && GRASS_ENABLED &&*/ (input->shader->isGrass || RB_ShouldUseGeometryGrass(input->shader->materialType))))
 		{// Always add tesselation to ground surfaces...
 			useTesselation = 2;
 		}
@@ -2400,7 +2400,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		if (TERRAIN_TESSELLATION_ENABLED
 			&& r_terrainTessellation->integer
 			&& r_terrainTessellationMax->value >= 2.0
-			&& (r_foliage->integer && GRASS_ENABLED && (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType))))
+			&& (/*r_foliage->integer && GRASS_ENABLED &&*/ (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType))))
 		{// Always add tesselation to ground surfaces...
 			tess.shader->tesselation = qfalse;
 

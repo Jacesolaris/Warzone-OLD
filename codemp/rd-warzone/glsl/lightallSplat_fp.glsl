@@ -371,6 +371,13 @@ vec4 GetControlMap( void )
 	float scale = 1.0 / SHADER_MAP_SIZE; /* control scale */
 	vec4 control;
 	
+#if 0
+	float offset = (SHADER_MAP_SIZE / 2.0) * scale;
+	control.r = SmoothNoise(vec3((m_vertPos.yzx * scale) + offset) * 64.0);
+	control.g = SmoothNoise(vec3((m_vertPos.xzy * scale) + offset) * 64.0);
+	control.b = SmoothNoise(vec3((m_vertPos.xyz * scale) + offset) * 64.0);
+	//control.rgb = clamp(control.rgb * u_Local9.g, 0.0, 1.0);
+#else
 	if (USE_TRIPLANAR >= 2.0)
 	{
 		control = vec4(var_Color.rgb, 0.0);
@@ -384,6 +391,7 @@ vec4 GetControlMap( void )
 		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 		control.rgb = clamp(control.rgb * 10.0, 0.0, 1.0);
 	}
+#endif
 
 	if (SHADER_HAS_SPLATMAP4 > 0.0 && IsRoadmapMaterial())
 	{// Also grab the roads map, if we have one...

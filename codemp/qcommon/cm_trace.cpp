@@ -204,7 +204,7 @@ void CM_LoadRoadImage(const char *mapName)
 		TERRAIN_TESSELLATION_ENABLED = (atoi(IniRead(mapname, "TESSELLATION", "TERRAIN_TESSELLATION_ENABLED", "1")) > 0) ? qtrue : qfalse;
 		TERRAIN_TESSELLATION_OFFSET = atof(IniRead(mapname, "TESSELLATION", "TERRAIN_TESSELLATION_OFFSET", "16.0"));
 
-		//Com_Printf("%s - GRASS %s. gDist %f. Tess %s. tOffset %f.\n", va("%s.mapInfo", tempName), GRASS_ENABLED ? "true" : "false", GRASS_DISTANCE_FROM_ROADS, TERRAIN_TESSELLATION_ENABLED ? "true" : "false", TERRAIN_TESSELLATION_OFFSET);
+		Com_Printf("%s - GRASS %s. gDist %f. Tess %s. tOffset %f.\n", va("%s.mapInfo", tempName), GRASS_ENABLED ? "true" : "false", GRASS_DISTANCE_FROM_ROADS, TERRAIN_TESSELLATION_ENABLED ? "true" : "false", TERRAIN_TESSELLATION_OFFSET);
 
 		// Parse any specified extra surface material types to add grasses to...
 		extern const char *materialNames[MATERIAL_LAST];
@@ -263,90 +263,6 @@ void CM_LoadRoadImage(const char *mapName)
 }
 
 #ifdef TESSELLATED_TERRAIN_COLLISIONS
-qboolean TESS_MAP_INITIALIZED = qfalse;
-til::Image *TESS_MAP = NULL;
-#endif //TESSELLATED_TERRAIN_COLLISIONS
-
-void CM_LoadHeightMapImage(const char *mapName)
-{
-#ifdef TESSELLATED_TERRAIN_COLLISIONS
-	if (!TESS_MAP && !TESS_MAP_INITIALIZED)
-	{
-		TESS_MAP_INITIALIZED = qtrue;
-
-		char name[512] = { 0 };
-		char tempName[512] = { 0 };
-		COM_StripExtension(mapName, tempName, sizeof(tempName));
-		strcpy(name, va("%s_tess", tempName));
-		char *ext = CM_TIL_TextureFileExistsFull(name);
-
-		if (ext)
-		{// Load map based tess map if one exists...
-			if (!TIL_INITIALIZED)
-			{
-				til::TIL_Init();
-				TIL_INITIALIZED = qtrue;
-			}
-
-			char fullPath[1024] = { 0 };
-			sprintf_s(fullPath, "warzone/%s.%s", name, ext);
-			TESS_MAP = til::TIL_Load(fullPath/*, TIL_FILE_ADDWORKINGDIR*/);
-
-			if (TESS_MAP && TESS_MAP->GetHeight() > 0 && TESS_MAP->GetWidth() > 0)
-			{
-				Com_Printf("CM_LoadHeightMapImage: Loaded image %s. Size %i x %i. Bit Depth %i.\n", fullPath, TESS_MAP->GetWidth(), TESS_MAP->GetHeight(), ROAD_MAP->GetBitDepth());
-			}
-			else
-			{
-				Com_Printf("CM_LoadRoadImage: Clould not load image %s. %s\n", fullPath, til::TIL_GetError());
-				til::TIL_Release(TESS_MAP);
-				TESS_MAP = NULL;
-			}
-		}
-		/*else
-		{
-			Com_Printf("%s does not exist.\n", name);
-		}*/
-
-		if (!TESS_MAP)
-		{// Load the generic tess map...
-			memset(name, 0, sizeof(name));
-			strcpy(name, "gfx/tessControlImage");
-			char *ext = CM_TIL_TextureFileExistsFull(name);
-
-			if (ext)
-			{
-				if (!TIL_INITIALIZED)
-				{
-					til::TIL_Init();
-					TIL_INITIALIZED = qtrue;
-				}
-
-				char fullPath[1024] = { 0 };
-				sprintf_s(fullPath, "warzone/%s.%s", name, ext);
-				TESS_MAP = til::TIL_Load(fullPath/*, TIL_FILE_ADDWORKINGDIR*/);
-
-				if (TESS_MAP && TESS_MAP->GetHeight() > 0 && TESS_MAP->GetWidth() > 0)
-				{
-					Com_Printf("CM_LoadHeightMapImage: Loaded image %s. Size %i x %i. Bit Depth %i.\n", fullPath, TESS_MAP->GetWidth(), TESS_MAP->GetHeight(), ROAD_MAP->GetBitDepth());
-				}
-				else
-				{
-					Com_Printf("CM_LoadRoadImage: Clould not load image %s. %s\n", fullPath, til::TIL_GetError());
-					til::TIL_Release(TESS_MAP);
-					TESS_MAP = NULL;
-				}
-			}
-			/*else
-			{
-				Com_Printf("%s does not exist.\n", name);
-			}*/
-		}
-	}
-#endif //TESSELLATED_TERRAIN_COLLISIONS
-}
-
-#ifdef TESSELLATED_TERRAIN_COLLISIONS
 #define PixelCopy(a,b) ((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2])
 
 qboolean RadSampleImage(uint8_t *pixels, int width, int height, qboolean is16bit, float st[2], float color[4])
@@ -400,15 +316,79 @@ qboolean RadSampleImage(uint8_t *pixels, int width, int height, qboolean is16bit
 	return qtrue;
 }
 
-float GetHeightmap(vec2_t pixel)
+#define HASHSCALE1 .1031
+
+float fract(float x)
 {
-	qboolean is16bit = qfalse;
+	return x - floor(x);
+}
 
-	if (TESS_MAP->GetBitDepth() >= 5) is16bit = qtrue;
+float trandom(vec2_t p)
+{
+	vec3_t p3, p4;
+	p3[0] = fract(p[0] * HASHSCALE1);
+	p3[1] = fract(p[1] * HASHSCALE1);
+	p3[2] = fract(p[0] * HASHSCALE1);
+	
+	p4[0] = p3[1] + 19.19;
+	p4[1] = p3[2] + 19.19;
+	p4[2] = p3[0] + 19.19;
 
-	vec4_t color;
-	RadSampleImage((uint8_t *)TESS_MAP->GetPixels(), TESS_MAP->GetWidth(), TESS_MAP->GetHeight(), is16bit, pixel, color);
-	return color[0];
+	float dt = DotProduct(p3, p4);
+	p3[0] += dt;
+	p3[1] += dt;
+	p3[2] += dt;
+	return fract((p3[0] + p3[1]) * p3[2]);
+}
+
+float mix(float x, float y, float a)
+{
+	return x * (1.0 - a) + y * a;
+}
+
+float noise(vec2_t st) {
+	vec2_t i;
+	i[0] = floor(st[0]);
+	i[1] = floor(st[1]);
+	vec2_t f;
+	f[0] = fract(st[0]);
+	f[1] = fract(st[1]);
+
+	// Four corners in 2D of a tile
+	float a = trandom(i);
+	vec2_t v;
+	v[0] = 1.0 + i[0];
+	v[1] = 0.0 + i[1];
+	float b = trandom(v);
+	v[0] = 0.0 + i[0];
+	v[1] = 1.0 + i[1];
+	float c = trandom(v);
+	v[0] = 1.0 + i[0];
+	v[1] = 1.0 + i[1];
+	float d = trandom(v);
+
+	// Smooth Interpolation
+
+	// Cubic Hermine Curve.  Same as SmoothStep()
+	vec2_t u;
+	u[0] = f[0] * f[0] * (3.0 - 2.0*f[0]);
+	u[1] = f[1] * f[1] * (3.0 - 2.0*f[1]);
+	u[2] = f[2] * f[2] * (3.0 - 2.0*f[2]);
+	// u = smoothstep(0.,1.,f);
+
+	// Mix 4 coorners percentages
+	
+	return mix(a, b, u[0]) +
+		(c - a)* u[1] * (1.0 - u[0]) +
+		(d - b) * u[0] * u[1];
+}
+
+float LDHeightForPosition(vec3_t pos)
+{
+	vec2_t p;
+	p[0] = pos[0] * 0.00875;
+	p[1] = pos[1] * 0.00875;
+	return noise(p);
 }
 
 float GetRoadFactor(vec2_t pixel)
@@ -439,7 +419,7 @@ float GetRoadFactor(vec2_t pixel)
 
 float R_TraceOffsetForPosition(vec3_t pos)
 {
-	if (!GRASS_ENABLED || !TERRAIN_TESSELLATION_ENABLED || !TESS_MAP) return 0.0;
+	if (!TERRAIN_TESSELLATION_ENABLED) return 0.0;
 
 	vec2_t pixel;
 	vec2_t mapSize;
@@ -450,7 +430,8 @@ float R_TraceOffsetForPosition(vec3_t pos)
 	pixel[1] = (pos[1] - MAP_INFO_MINS[1]) / mapSize[1];
 
 	float roadScale = ROAD_MAP ? GetRoadFactor(pixel) : 0.0;
-	float offsetScale = GetHeightmap(pixel);
+	float SmoothRand = LDHeightForPosition(pos);
+	float offsetScale = SmoothRand * Q_clamp(0.75, 1.0 - roadScale, 1.0);
 
 	float offset = max(offsetScale, roadScale) - 0.5;
 	return offset * TERRAIN_TESSELLATION_OFFSET;
@@ -1902,12 +1883,18 @@ trace_lock.unlock();
 trace_lock.unlock();
 
 #ifdef TESSELLATED_TERRAIN_COLLISIONS
-	//if (/*trace->fraction < 1.0 &&*/ (trace->contents & CONTENTS_TERRAIN))
-	if (trace->fraction < 1.0)
+	if (TERRAIN_TESSELLATION_ENABLED)
 	{
-		float offset = R_TraceOffsetForPosition(trace->endpos);
-		Com_Printf("offset %f.\n", offset);
-		trace->endpos[2] += offset;
+		if (/*trace->fraction < 1.0 &&*/ (trace->materialType == MATERIAL_SHORTGRASS || trace->materialType == MATERIAL_LONGGRASS))
+		{
+			float offset = R_TraceOffsetForPosition(trace->endpos);
+			Com_Printf("offset %f.\n", offset);
+
+			float startheight = trace->endpos[2];
+			float endHeight = trace->endpos[2] + offset;
+			trace->plane.dist -= offset;
+			trace->endpos[2] = endHeight;
+		}
 	}
 #endif //TESSELLATED_TERRAIN_COLLISIONS
 }

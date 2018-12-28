@@ -5,6 +5,8 @@ uniform vec2	u_Dimensions;
 
 varying vec2	var_TexCoords;
 
+#if 1
+/*
 vec2 dist2(vec3 p)
 {
 	const vec2 f1 = vec2(1048576.0, 0.0);
@@ -32,7 +34,7 @@ float amb_occ(vec3 p)
 	acc+=dist(p+vec3(+ambocce,+ambocce,+ambocce));
 	return 0.5+acc /(16.0*ambocce);
 }
-
+*/
 
 #define MAX_GHOSTS 4
 #define GHOST_DISPERSAL (0.7)
@@ -150,3 +152,33 @@ void main()
 	gl_FragColor = vec4(fColor.rgb, 1.0);
 }
 
+#else // TODO?
+
+float lensflare(vec2 fragCoord) {
+    vec3 ro, ta;
+    mat3 cam = getCamera( iTime, iMouse/u_Dimensions.xyxy, ro, ta );
+    vec3 cpos = SUN_DIR*cam; 
+    vec2 pos = CAMERA_FL * cpos.xy / cpos.z;
+    vec2 uv = (-u_Dimensions.xy + 2.0*fragCoord)/u_Dimensions.y;
+    
+	vec2 uvd = uv*(length(uv));
+	float f = 0.1/(length(uv-pos)*16.0+1.0);
+	f += max(1.0/(1.0+32.0*pow(length(uvd+0.8*pos),2.0)),.0)*0.25;
+	vec2 uvx = mix(uv,uvd,-0.5);
+	f += max(0.01-pow(length(uvx+0.4*pos),2.4),.0)*6.0;
+	f += max(0.01-pow(length(uvx-0.3*pos),1.6),.0)*6.0;
+	uvx = mix(uv,uvd,-0.4);
+	f += max(0.01-pow(length(uvx+0.2*pos),5.5),.0)*2.0;
+    
+	return f;
+}
+
+void main()
+{
+	vec3 fColor = texture2D(u_DiffuseMap, var_TexCoords).rgb;
+	fColor.rgb += SUN_COLOR * lensflare(var_TexCoords) * smoothstep(-0.3, 0.5, dot(rd, SUN_DIR));       
+	fColor.rgb = clamp(fColor.rgb, 0.0, 1.0);
+	gl_FragColor = vec4(fColor.rgb, 1.0);
+}
+
+#endif

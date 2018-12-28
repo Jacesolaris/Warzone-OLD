@@ -14,7 +14,7 @@
 #endif //__LQ_MODE__
 
 uniform sampler2D							u_DiffuseMap;		// Screen image
-uniform sampler2D							u_ScreenDepthMap;	// Depth map
+uniform sampler2D							u_ScreenDepthMap;	// Depth map - currently unused
 uniform sampler2D							u_NormalMap;		// Flat normals
 uniform sampler2D							u_PositionMap;		// positionMap
 uniform sampler2D							u_WaterPositionMap;	// water positions
@@ -28,7 +28,7 @@ uniform sampler2D							u_RoadsControlMap;	// Screen Pshadows Map
 uniform samplerCube							u_SkyCubeMap;		// Day sky cubemap
 uniform samplerCube							u_SkyCubeMapNight;	// Night sky cubemap
 uniform samplerCube							u_CubeMap;			// Closest cubemap
-uniform samplerCube							u_EmissiveCubeMap;	// Closest emissive cubemap
+uniform samplerCube							u_EmissiveCubeMap;	// Closest emissive cubemap - currently unused
 
 uniform mat4								u_ModelViewProjectionMatrix;
 
@@ -982,7 +982,14 @@ vec4 Clouds(in vec2 fragCoord)
 
 float CloudShadows(vec3 position)
 {
-	vec3 cViewDir = normalize((u_PrimaryLightOrigin.xyz - position.xyz) + u_ViewOrigin.xyz);
+	//vec3 cViewDir = normalize((u_PrimaryLightOrigin.xyz - position.xyz) + u_ViewOrigin.xyz);
+	//vec3 cViewDir = normalize(((u_PrimaryLightOrigin.xyz - u_ViewOrigin.xyz) - (position.xyz - u_ViewOrigin.xyz)));
+	
+	//vec3 cViewDir = normalize(position.xyz - u_PrimaryLightOrigin.xyz);
+	//cViewDir.xyz += normalize(u_ViewOrigin.xyz);
+	//cViewDir.xyz = normalize(cViewDir.xyz);
+	//cViewDir.xy *= -1.0;
+	vec3 cViewDir = -normalize(position.xyz);
 
 	vec4 cloudColor = Clouds(cViewDir.xy * 0.5 + 0.5);
 	cloudColor.a *= clamp(pow(-cViewDir.z, 1.75), 0.0, 1.0);

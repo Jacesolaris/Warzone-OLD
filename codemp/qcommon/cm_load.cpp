@@ -1358,7 +1358,6 @@ static void CM_LoadMap_Actual( const char *name, qboolean clientload, int *check
 	}
 
 	CM_LoadRoadImage(name);
-	CM_LoadHeightMapImage(name);
 	CM_SetTerrainContents(cm);
 }
 

@@ -498,6 +498,17 @@ float getwavesDetail( vec2 p )
     return h;
 }
 
+void ApplyHeightAdjustments(inout float height)
+{
+	height *= 1.05;
+	height = pow(height, 1.5);
+	
+	//height = (height - u_Local0.r) * u_Local0.g;
+	
+	//height = height * u_Local0.r + u_Local0.g;
+	//if (u_Local0.b > 0.0) height = clamp(height, 0.0, 1.0);
+}
+
 void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float height, inout float chopheight, inout vec3 waveNormal, inout vec3 lightingNormal, in vec3 eyeVecNorm, in float timer, in float level) {
 #if !defined(__LQ_MODE__) && defined(REAL_WAVES)
 #define waveDetailFactor 0.333 //0.5
@@ -506,8 +517,7 @@ void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float hei
 	{
 		height = getwaves(pos.xy) * depth;
 
-		height *= 1.05;//1.4;
-		height = pow(height, 1.5);
+		ApplyHeightAdjustments(height);
 
 		// Create a basic "big waves" normal vector...
 		vec2 ex = vec2(e, 0.0) * 32.0;//16.0;
@@ -515,11 +525,9 @@ void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float hei
 		float height2 = getwaves(pos.xy + ex.xy) * depth;
 		float height3 = getwaves(pos.xy + ex.yx) * depth;
 
-		height2 *= 1.05;//1.4;
-		height2 = pow(height2, 1.5);
+		ApplyHeightAdjustments(height2);
 
-		height3 *= 1.05;//1.4;
-		height3 = pow(height3, 1.5);
+		ApplyHeightAdjustments(height3);
 
 		vec3 a = vec3(depth, height * 64.0/*0.001*/, depth);
 		vec3 b = vec3(depth - ex.x, height2 * 64.0/*0.001*/, depth);
@@ -606,6 +614,7 @@ void ScanHeightMap(in vec4 waterMapLower, inout vec3 surfacePoint, inout vec3 ey
 		if (pos.y <= maxHeight)
 		{
 			float h = getwaves(pos.xz*0.03);
+			//ApplyHeightAdjustments(h);
 
 			if (!IS_UNDERWATER && level + (h * waveHeight) >= pos.y)
 			{
@@ -989,7 +998,7 @@ void main ( void )
 		{
 			level = level + (height * waveHeight);
 			
-			surfacePoint.xyz += vec3(0.0, 1.0, 0.0)/*lightingNormal*/ * height * waveHeight;
+			//surfacePoint.xyz += vec3(0.0, 1.0, 0.0)/*lightingNormal*/ * height * waveHeight;
 			//surfacePoint.y = level;
 			
 			//surfacePoint.xyz = waterMapLower.xyz;
