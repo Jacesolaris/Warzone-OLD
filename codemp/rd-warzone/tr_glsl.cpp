@@ -88,14 +88,14 @@ extern const char *fallbackShader_weather_vp;
 extern const char *fallbackShader_weather_fp;
 extern const char *fallbackShader_surfaceSprite_vp;
 extern const char *fallbackShader_surfaceSprite_fp;
-extern const char *fallbackShader_sss_vp;
-extern const char *fallbackShader_sss_fp;
-extern const char *fallbackShader_sssBlur_vp;
-extern const char *fallbackShader_sssBlur_fp;
-extern const char *fallbackShader_ssdo_vp;
-extern const char *fallbackShader_ssdo_fp;
-extern const char *fallbackShader_ssdoBlur_vp;
-extern const char *fallbackShader_ssdoBlur_fp;
+//extern const char *fallbackShader_sss_vp;
+//extern const char *fallbackShader_sss_fp;
+//extern const char *fallbackShader_sssBlur_vp;
+//extern const char *fallbackShader_sssBlur_fp;
+//extern const char *fallbackShader_ssdo_vp;
+//extern const char *fallbackShader_ssdo_fp;
+//extern const char *fallbackShader_ssdoBlur_vp;
+//extern const char *fallbackShader_ssdoBlur_fp;
 extern const char *fallbackShader_instance_vp;
 extern const char *fallbackShader_instance_fp;
 extern const char *fallbackShader_occlusion_vp;
@@ -1403,7 +1403,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_vlightColors", GLSL_VEC3, 1 },
 
 	{ "u_Samples", GLSL_INT, 1 },
-	{ "u_SsdoKernel", GLSL_VEC3, 32 },
+	//{ "u_SsdoKernel", GLSL_VEC3, 32 },
 };
 
 void GLSL_PrintProgramInfoLog(GLuint object, qboolean developerOnly)
@@ -3808,7 +3808,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	/*attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.ssdoShader, "ssdo", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssdo_vp, fallbackShader_ssdo_fp, NULL, NULL, NULL))
@@ -3822,7 +3822,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (!GLSL_BeginLoadGPUShader(&tr.ssdoBlurShader, "ssdoBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssdoBlur_vp, fallbackShader_ssdoBlur_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load ssdoBlur shader!");
-	}
+	}*/
 
 	/*
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -5185,7 +5185,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.ssdoShader))
+	/*if (!GLSL_EndLoadGPUShader(&tr.ssdoShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load ssdo shader!");
 	}
@@ -5218,7 +5218,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 #endif
 
 	numEtcShaders++;
-
+	*/
 
 
 	/*if (!GLSL_EndLoadGPUShader(&tr.sssShader))
@@ -6928,8 +6928,8 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.ssaoShader);
 	//GLSL_DeleteGPUShader(&tr.sssShader);
 	//GLSL_DeleteGPUShader(&tr.sssBlurShader);
-	GLSL_DeleteGPUShader(&tr.ssdoShader);
-	GLSL_DeleteGPUShader(&tr.ssdoBlurShader);
+	//GLSL_DeleteGPUShader(&tr.ssdoShader);
+	//GLSL_DeleteGPUShader(&tr.ssdoBlurShader);
 
 #ifdef __XYC_SURFACE_SPRITES__
 	GLSL_DeleteGPUShader(&tr.surfaceSpriteShader);

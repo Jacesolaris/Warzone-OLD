@@ -544,6 +544,7 @@ void FBO_Init(void)
 	//
 	// UQ1's SSDO FBO1...
 	//
+	/*
 	{
 		tr.ssdoFbo1 = FBO_Create("_ssdoFbo1", tr.ssdoImage1->width, tr.ssdoImage1->height);
 		FBO_Bind(tr.ssdoFbo1);
@@ -560,10 +561,12 @@ void FBO_Init(void)
 		FBO_AttachTextureImage(tr.ssdoImage2, 0);
 		R_CheckFBO(tr.ssdoFbo2);
 	}
+	*/
 
 	//
 	// UQ1's SSS FBO1...
 	//
+	/*
 	{
 		tr.sssFbo1 = FBO_Create("_sssFbo1", tr.sssImage1->width, tr.sssImage1->height);
 		FBO_Bind(tr.sssFbo1);
@@ -580,7 +583,7 @@ void FBO_Init(void)
 		FBO_AttachTextureImage(tr.sssImage2, 0);
 		R_CheckFBO(tr.sssFbo2);
 	}
-
+	*/
 
 	//
 	// Bloom VBO's...

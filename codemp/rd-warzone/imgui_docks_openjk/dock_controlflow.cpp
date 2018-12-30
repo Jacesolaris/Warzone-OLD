@@ -23,7 +23,7 @@ void DockControlFlow::imgui() {
 		showCvar("if (r_ao >= 2) RB_SSAO()"                                    , r_ao              );
 		showCvar("if (r_cartoon >= 2) RB_CellShade()"                          , r_cartoon         );
 		showCvar("if (r_cartoon >= 3) RB_Paint()"                              , r_cartoon         );
-		showCvar("if (AO_DIRECTIONAL) RB_SSDO()"                               , r_ssdo            );
+		//showCvar("if (AO_DIRECTIONAL) RB_SSDO()"                               , r_ssdo            );
 		//showCvar("RB_SSS()"                                                    , r_sss             );
 		showCvar("if (r_bloom >= 2 || r_anamorphic) RB_CreateAnamorphicImage()", r_anamorphic      );
 		showCvar("if (!LATE_LIGHTING_ENABLED) RB_DeferredLighting()"           , r_deferredLighting);

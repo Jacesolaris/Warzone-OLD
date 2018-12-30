@@ -3426,7 +3426,7 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-		if (!SCREEN_BLUR && r_ssdo->integer && AO_DIRECTIONAL)
+		/*if (!SCREEN_BLUR && r_ssdo->integer && AO_DIRECTIONAL)
 		{
 			if (!r_lowVram->integer)
 			{
@@ -3439,7 +3439,7 @@ const void *RB_PostProcess(const void *data)
 
 				DEBUG_EndTimer(qtrue);
 			}
-		}
+		}*/
 
 		/*if (!SCREEN_BLUR && r_sss->integer)
 		{

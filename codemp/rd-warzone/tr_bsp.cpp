@@ -4256,7 +4256,7 @@ int R_CloseLightOfColorNear(vec3_t pos, float distance, vec4_t color, float colo
 
 		if (Distance(MAP_GLOW_LOCATIONS[i], pos) < distance)
 		{
-			if (Distance(MAP_GLOW_COLORS[i], color) < colorTolerance) // forget alpha...
+			if (Distance(MAP_GLOW_COLORS[i], color) <= colorTolerance) // forget alpha...
 			{
 				return i;
 			}
@@ -4272,6 +4272,14 @@ qboolean CONTENTS_INSIDE_OUTSIDE_FOUND = qfalse;
 extern int ENABLE_INDOOR_OUTDOOR_SYSTEM;
 qboolean INDOOR_BRUSH_FOUND = qfalse;
 #endif //__INDOOR_OUTDOOR_CULLING__
+
+void R_CenterOfBounds(vec3_t mins, vec3_t maxs, vec3_t *center)
+{
+	for (int i = 0; i < 3; i++)
+	{
+		*center[i] = (mins[i] + maxs[i]) / 2.0;
+	}
+}
 
 static void R_SetupMapGlowsAndWaterPlane( void )
 {
@@ -4345,6 +4353,8 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			}
 #endif //__INDOOR_OUTDOOR_CULLING__
 
+			srfBspSurface_t *bspSurf = (srfBspSurface_t *)surf->data;
+
 			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 			{
 				qboolean isBuilding = ((surf->shader->materialType) == MATERIAL_CONCRETE && surf->shader->stages[stage] && surf->shader->stages[stage]->bundle[TB_STEEPMAP].image[0]) ? qtrue : qfalse;
@@ -4373,33 +4383,22 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 						radius = Distance(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]) / 2.0;
 					}
 
-					if (/*surf->shader->stages[stage]->emissiveConeAngle > 0.0 &&*/ radius >= 32.0)
+					if (bspSurf)
 					{
-						//if (*surf->data == SF_FACE || *surf->data == SF_TRIANGLES)
+						if (/*surf->shader->stages[stage]->emissiveConeAngle > 0.0 &&*/ radius >= 32.0)
 						{
-							srfBspSurface_t *bspSurf = (srfBspSurface_t *)surf->data;
-							if (bspSurf)
-							{
-								emissiveConeAngle = surf->shader->stages[stage]->emissiveConeAngle;
-								//VectorCopy(bspSurf->verts[0].normal, emissiveConeDirection);
-								emissiveConeDirection[0] = bspSurf->verts[0].normal[0] * 2.0 - 1.0;
-								emissiveConeDirection[1] = bspSurf->verts[0].normal[1] * 2.0 - 1.0;
-								emissiveConeDirection[2] = bspSurf->verts[0].normal[2] * 2.0 - 1.0;
-							}
+							emissiveConeAngle = surf->shader->stages[stage]->emissiveConeAngle;
+							//VectorCopy(bspSurf->verts[0].normal, emissiveConeDirection);
+							emissiveConeDirection[0] = bspSurf->verts[0].normal[0] * 2.0 - 1.0;
+							emissiveConeDirection[1] = bspSurf->verts[0].normal[1] * 2.0 - 1.0;
+							emissiveConeDirection[2] = bspSurf->verts[0].normal[2] * 2.0 - 1.0;
 						}
-					}
-					else
-					{
-						//if (*surf->data == SF_FACE || *surf->data == SF_TRIANGLES)
+						else if (surf->shader->stages[stage]->emissiveConeAngle > 0.0)
 						{
-							srfBspSurface_t *bspSurf = (srfBspSurface_t *)surf->data;
-							if (bspSurf && surf->shader->stages[stage]->emissiveConeAngle > 0.0)
-							{
-								emissiveConeAngle = surf->shader->stages[stage]->emissiveConeAngle;
-								emissiveConeDirection[0] = bspSurf->verts[0].normal[0] * 2.0 - 1.0;
-								emissiveConeDirection[1] = bspSurf->verts[0].normal[1] * 2.0 - 1.0;
-								emissiveConeDirection[2] = bspSurf->verts[0].normal[2] * 2.0 - 1.0;
-							}
+							emissiveConeAngle = surf->shader->stages[stage]->emissiveConeAngle;
+							emissiveConeDirection[0] = bspSurf->verts[0].normal[0] * 2.0 - 1.0;
+							emissiveConeDirection[1] = bspSurf->verts[0].normal[1] * 2.0 - 1.0;
+							emissiveConeDirection[2] = bspSurf->verts[0].normal[2] * 2.0 - 1.0;
 						}
 					}
 
@@ -4408,6 +4407,219 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 					//ri->Printf(PRINT_WARNING, "%s color is %f %f %f.\n", surf->shader->stages[stage]->bundle[0].image[0]->imgName, glowColor[0], glowColor[1], glowColor[2]);
 					break;
 				}
+			}
+
+#define EMISSIVE_MERGE_RADIUS 128.0//64.0
+
+			if (hasGlow && bspSurf && !StringContainsWord(surf->shader->name, "warzone/trees"))
+			{// Handle individual verts, since we can. So we don't loose individual lights with merging... Tree glows can be merged though...
+				hasGlow = qfalse;
+
+				VectorScale(glowColor, emissiveColorScale, glowColor);
+
+				radius = 512.0;// 128.0;// 64.0;// Distance(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]) / 2.0;
+
+			
+				if (radius > 0)
+				{
+#if 1
+#define TEMP_LIGHTS_MAX 1024
+					int		TEMP_LIGHTS_NUM = 0;
+					vec3_t	TEMP_LIGHTS_BASE_POSITION[TEMP_LIGHTS_MAX];
+					vec3_t	TEMP_LIGHTS_MINS[TEMP_LIGHTS_MAX];
+					vec3_t	TEMP_LIGHTS_MAXS[TEMP_LIGHTS_MAX];
+					
+					for (int z = 0; z < TEMP_LIGHTS_MAX; z++)
+					{
+						VectorClear(TEMP_LIGHTS_MINS[z]);
+						VectorClear(TEMP_LIGHTS_MAXS[z]);
+					}
+
+					for (int v = 0; v < bspSurf->numVerts; v++)
+					{// Create temp lights list, with any connected positions...
+						srfVert_t *vert = &bspSurf->verts[v];
+
+						int CLOSE_TO_TEMP_ID = -1;
+
+						for (int l = 0; l < TEMP_LIGHTS_NUM; l++)
+						{
+							//vec3_t center;
+							//R_CenterOfBounds(TEMP_LIGHTS_MINS[l], TEMP_LIGHTS_MAXS[l], &center);
+
+							if (Distance(/*center*/TEMP_LIGHTS_BASE_POSITION[l], vert->xyz) <= 448.0)
+							{
+								CLOSE_TO_TEMP_ID = l;
+								break;
+							}
+						}
+
+						if (CLOSE_TO_TEMP_ID >= 0)
+						{// Add to current list for this light...
+							AddPointToBounds(vert->xyz, TEMP_LIGHTS_MINS[CLOSE_TO_TEMP_ID], TEMP_LIGHTS_MAXS[CLOSE_TO_TEMP_ID]);
+						}
+						else
+						{// Not close to another light currently in the list, so make a new light...
+							if (TEMP_LIGHTS_NUM + 1 >= TEMP_LIGHTS_MAX)
+							{
+								ri->Printf(PRINT_WARNING, "Hit max temp lights...\n");
+							}
+							else
+							{
+								VectorCopy(vert->xyz, TEMP_LIGHTS_BASE_POSITION[TEMP_LIGHTS_NUM]);
+								VectorCopy(vert->xyz, TEMP_LIGHTS_MINS[TEMP_LIGHTS_NUM]);
+								VectorCopy(vert->xyz, TEMP_LIGHTS_MAXS[TEMP_LIGHTS_NUM]);
+								TEMP_LIGHTS_NUM++;
+							}
+						}
+					}
+
+					for (int l = 0; l < TEMP_LIGHTS_NUM; l++)
+					{// Add the new light...
+						// Now all the positions have been merged into mins/maxs. Grab the central point and generate a radius...
+						vec3_t surfOrigin;
+						surfOrigin[0] = (TEMP_LIGHTS_MINS[l][0] + TEMP_LIGHTS_MAXS[l][0]) / 2.0;
+						surfOrigin[1] = (TEMP_LIGHTS_MINS[l][1] + TEMP_LIGHTS_MAXS[l][1]) / 2.0;
+						surfOrigin[2] = (TEMP_LIGHTS_MINS[l][2] + TEMP_LIGHTS_MAXS[l][2]) / 2.0;
+
+						radius = Distance(TEMP_LIGHTS_MINS[l], TEMP_LIGHTS_MAXS[l]);
+
+						// Now we have a central point and radius, make a new emissive light there...
+						if (NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS)
+						{
+							radius = Q_clamp(128.0/*64.0*/, radius, 192.0/*128.0*/);
+
+#pragma omp critical (__MAP_GLOW_ADD__)
+							{
+								VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+								VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
+								MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 2.25;
+								MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
+
+								MAP_GLOW_CONEANGLE[NUM_MAP_GLOW_LOCATIONS] = emissiveConeAngle;
+								VectorCopy(emissiveConeDirection, MAP_GLOW_CONEDIRECTION[NUM_MAP_GLOW_LOCATIONS]);
+
+								MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
+
+								if (r_debugEmissiveLights->integer)
+								{
+									ri->Printf(PRINT_WARNING, "(Vert) Light %i (at %i %i %i) radius %f. emissiveColorScale %f. emissiveRadiusScale %f. color %f %f %f. coneAngle %f. coneDirection %f %f %f.\n"
+										, NUM_MAP_GLOW_LOCATIONS
+										, (int)MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS][0], (int)MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS][1], (int)MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS][2]
+										, MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS]
+										, emissiveColorScale
+										, emissiveRadiusScale
+										, glowColor[0], glowColor[1], glowColor[2]
+										, emissiveConeAngle
+										, emissiveConeDirection[0], emissiveConeDirection[1], emissiveConeDirection[2]);
+								}
+
+								NUM_MAP_GLOW_LOCATIONS++;
+							}
+						}
+					}
+#else
+					for (int v = 0; v < bspSurf->numVerts; v++)
+					{
+						srfVert_t *vert = &bspSurf->verts[v];
+						vec3_t surfOrigin;
+
+						VectorCopy(vert->xyz, surfOrigin);
+
+#ifdef __ALLOW_MAP_GLOWS_MERGE__
+
+						int lightTooCloseID = -1;// R_CloseLightOfColorNear(surfOrigin, 16.0, glowColor, 99999.0);
+						int sameColorGlowNearID = R_CloseLightOfColorNear(surfOrigin, EMISSIVE_MERGE_RADIUS, glowColor, 0.0/*1.0*/);
+
+						if (emissiveConeAngle == 0.0 && lightTooCloseID >= 0)
+						{// Don't add this duplicate light at all... Just mix the colors... In case theres 2 overlayed textures of diff colors, etc...
+							MAP_GLOW_COLORS[lightTooCloseID][0] = (MAP_GLOW_COLORS[lightTooCloseID][0] + glowColor[0]) / 2.0;
+							MAP_GLOW_COLORS[lightTooCloseID][1] = (MAP_GLOW_COLORS[lightTooCloseID][1] + glowColor[1]) / 2.0;
+							MAP_GLOW_COLORS[lightTooCloseID][2] = (MAP_GLOW_COLORS[lightTooCloseID][2] + glowColor[2]) / 2.0;
+
+							if (r_debugEmissiveLights->integer)
+							{
+								ri->Printf(PRINT_WARNING, "(Vert) Light %i (at %i %i %i) was mixed colors with another really close light (at %i %i %i). new color: %f %f %f.\n"
+									, lightTooCloseID
+									, (int)MAP_GLOW_LOCATIONS[lightTooCloseID][0], (int)MAP_GLOW_LOCATIONS[lightTooCloseID][1], (int)MAP_GLOW_LOCATIONS[lightTooCloseID][2]
+									, (int)surfOrigin[0], (int)surfOrigin[1], (int)surfOrigin[2]
+									, MAP_GLOW_COLORS[lightTooCloseID][0], MAP_GLOW_COLORS[lightTooCloseID][1], MAP_GLOW_COLORS[lightTooCloseID][2]);
+							}
+						}
+						else if (emissiveConeAngle == 0.0 && sameColorGlowNearID >= 0)
+						{// Already the same color light nearby... Merge...
+						 // Add extra radius to the original one, instead of adding a new light...
+							float distFromOther = Distance(MAP_GLOW_LOCATIONS[sameColorGlowNearID], surfOrigin);
+							float radiusMult = Q_clamp(0.0, distFromOther / EMISSIVE_MERGE_RADIUS, 1.0);
+							MAP_GLOW_RADIUSES[sameColorGlowNearID] += MAP_GLOW_RADIUSES[sameColorGlowNearID] * radiusMult * 0.5;
+
+							// Also move the light's position to the center of the 2 positions...
+							vec3_t originalOrigin;
+
+							if (r_debugEmissiveLights->integer)
+							{
+								VectorCopy(MAP_GLOW_LOCATIONS[sameColorGlowNearID], originalOrigin);
+							}
+
+							MAP_GLOW_LOCATIONS[sameColorGlowNearID][0] = surfOrigin[0] + MAP_GLOW_LOCATIONS[sameColorGlowNearID][0] / 2.0;
+							MAP_GLOW_LOCATIONS[sameColorGlowNearID][1] = surfOrigin[1] + MAP_GLOW_LOCATIONS[sameColorGlowNearID][1] / 2.0;
+							MAP_GLOW_LOCATIONS[sameColorGlowNearID][2] = surfOrigin[2] + MAP_GLOW_LOCATIONS[sameColorGlowNearID][2] / 2.0;
+
+							MAP_GLOW_COLORS[sameColorGlowNearID][0] = (MAP_GLOW_COLORS[sameColorGlowNearID][0] + glowColor[0]) / 2.0;
+							MAP_GLOW_COLORS[sameColorGlowNearID][1] = (MAP_GLOW_COLORS[sameColorGlowNearID][1] + glowColor[1]) / 2.0;
+							MAP_GLOW_COLORS[sameColorGlowNearID][2] = (MAP_GLOW_COLORS[sameColorGlowNearID][2] + glowColor[2]) / 2.0;
+
+							if (r_debugEmissiveLights->integer)
+							{
+								ri->Printf(PRINT_WARNING, "(Vert) Light at (at %i %i %i) was merged with another light %i (at %i %i %i). new origin: %i %i %i. new radius %f. light color: %f %f %f.\n"
+									, (int)originalOrigin[0], (int)originalOrigin[1], (int)originalOrigin[2]
+									, sameColorGlowNearID
+									, (int)surfOrigin[0], (int)surfOrigin[1], (int)surfOrigin[2]
+									, (int)MAP_GLOW_LOCATIONS[sameColorGlowNearID][0], (int)MAP_GLOW_LOCATIONS[sameColorGlowNearID][1], (int)MAP_GLOW_LOCATIONS[sameColorGlowNearID][2]
+									, MAP_GLOW_RADIUSES[sameColorGlowNearID]
+									, MAP_GLOW_COLORS[sameColorGlowNearID][0], MAP_GLOW_COLORS[sameColorGlowNearID][1], MAP_GLOW_COLORS[sameColorGlowNearID][2]);
+							}
+						}
+						else
+#endif //__ALLOW_MAP_GLOWS_MERGE__
+							if (NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS)
+							{
+								radius = Q_clamp(64.0, radius, 128.0);
+
+#pragma omp critical (__MAP_GLOW_ADD__)
+								{
+									VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+									VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
+									MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 2.25;
+									MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
+
+									MAP_GLOW_CONEANGLE[NUM_MAP_GLOW_LOCATIONS] = emissiveConeAngle;
+									VectorCopy(emissiveConeDirection, MAP_GLOW_CONEDIRECTION[NUM_MAP_GLOW_LOCATIONS]);
+
+									MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
+
+									if (r_debugEmissiveLights->integer)
+									{
+										ri->Printf(PRINT_WARNING, "(Vert) Light %i (at %i %i %i) radius %f. emissiveColorScale %f. emissiveRadiusScale %f. color %f %f %f. coneAngle %f. coneDirection %f %f %f.\n"
+											, NUM_MAP_GLOW_LOCATIONS
+											, (int)MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS][0], (int)MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS][1], (int)MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS][2]
+											, MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS]
+											, emissiveColorScale
+											, emissiveRadiusScale
+											, glowColor[0], glowColor[1], glowColor[2]
+											, emissiveConeAngle
+											, emissiveConeDirection[0], emissiveConeDirection[1], emissiveConeDirection[2]);
+									}
+
+									NUM_MAP_GLOW_LOCATIONS++;
+								}
+							}
+
+
+					}
+#endif
+				}
+
+				radius = 0.0;
 			}
 		}
 
@@ -4432,7 +4644,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		{// While doing this, also find lowest water height, so that we can cull underwater grass drawing...
 			if (surfOrigin[2] < MAP_WATER_LEVEL)
 			{
-//#pragma omp critical (__MAP_WATER_LEVEL__)
+#pragma omp critical (__MAP_WATER_LEVEL__)
 				{
 					MAP_WATER_LEVEL2 = MAP_WATER_LEVEL;
 					MAP_WATER_LEVEL = surfOrigin[2];
@@ -4443,15 +4655,8 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		if (hasGlow)
 		{
 			VectorScale(glowColor, emissiveColorScale, glowColor);
-			//VectorScale(glowColor, 0.333, glowColor);
-			//VectorNormalize(glowColor);
-
-			//R_AddLightVibrancy(glowColor, 0.1);
-			//VectorNormalize(glowColor);
 
 #ifdef __ALLOW_MAP_GLOWS_MERGE__
-
-#define EMISSIVE_MERGE_RADIUS 128.0//64.0
 
 			int sameColorTooCloseID = R_CloseLightOfColorNear(surfOrigin, 16.0, glowColor, 99999.0);
 			int sameColorGlowNearID = R_CloseLightOfColorNear(surfOrigin, EMISSIVE_MERGE_RADIUS, glowColor, 1.0);
@@ -4511,7 +4716,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			{
 				radius = Q_clamp(64.0, radius, 128.0);
 				
-	//#pragma omp critical (__MAP_GLOW_ADD__)
+				#pragma omp critical (__MAP_GLOW_ADD__)
 				{
 					VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
 					VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);

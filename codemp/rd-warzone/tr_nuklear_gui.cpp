@@ -1231,7 +1231,7 @@ void GUI_PostProcessMakeCvarList() {
 	GUI_PostProcessAddCvar(r_ssdm, 2);
 	GUI_PostProcessAddCvar(r_ao, 3);
 	GUI_PostProcessAddCvar(r_cartoon, 3);
-	GUI_PostProcessAddCvar(r_ssdo, 1);
+	//GUI_PostProcessAddCvar(r_ssdo, 1);
 	//GUI_PostProcessAddCvar(r_sss, 1);
 	GUI_PostProcessAddCvar(r_deferredLighting, 1);
 	//GUI_PostProcessAddCvar(r_ssr, 1);

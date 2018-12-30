@@ -5,7 +5,6 @@
 #define __ENHANCED_AO__
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __CLOUD_SHADOWS__
-//#define __SSDO__
 
 #ifdef USE_CUBEMAPS
 	#define __CUBEMAPS__
@@ -14,13 +13,13 @@
 #endif //__LQ_MODE__
 
 uniform sampler2D							u_DiffuseMap;		// Screen image
-uniform sampler2D							u_ScreenDepthMap;	// Depth map - currently unused
+//uniform sampler2D							u_ScreenDepthMap;	// Depth map - currently unused
 uniform sampler2D							u_NormalMap;		// Flat normals
 uniform sampler2D							u_PositionMap;		// positionMap
 uniform sampler2D							u_WaterPositionMap;	// water positions
 uniform sampler2D							u_OverlayMap;		// Real normals. Alpha channel 1.0 means enabled...
 uniform sampler2D							u_SteepMap;			// ssao image
-uniform sampler2D							u_HeightMap;		// ssdoImage
+//uniform sampler2D							u_HeightMap;		// unused
 uniform sampler2D							u_GlowMap;			// anamorphic
 uniform sampler2D							u_ShadowMap;		// Screen Shadow Map
 uniform sampler2D							u_WaterEdgeMap;		// tr.shinyImage
@@ -28,16 +27,16 @@ uniform sampler2D							u_RoadsControlMap;	// Screen Pshadows Map
 uniform samplerCube							u_SkyCubeMap;		// Day sky cubemap
 uniform samplerCube							u_SkyCubeMapNight;	// Night sky cubemap
 uniform samplerCube							u_CubeMap;			// Closest cubemap
-uniform samplerCube							u_EmissiveCubeMap;	// Closest emissive cubemap - currently unused
+//uniform samplerCube							u_EmissiveCubeMap;	// Closest emissive cubemap - currently unused
 
 uniform mat4								u_ModelViewProjectionMatrix;
 
 uniform vec2								u_Dimensions;
 
 uniform vec4								u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, SSDM_ENABLED
-uniform vec4								u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
+uniform vec4								u_Local2; // 0.0, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
 uniform vec4								u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
-uniform vec4								u_Local4; // 0.0, 0.0, 0.0, MAP_EMISSIVE_COLOR_SCALE
+uniform vec4								u_Local4; // haveConeAngles, 0.0, 0.0, MAP_EMISSIVE_COLOR_SCALE
 uniform vec4								u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
 uniform vec4								u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
 uniform vec4								u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
@@ -80,12 +79,12 @@ varying vec2								var_TexCoords;
 #define AO_TYPE								u_Local1.b
 #define SSDM_ENABLED						u_Local1.a
 
-#define USE_SSDO							u_Local2.r
+//#define USE_SSDO							u_Local2.r
 #define SHADOWS_ENABLED						u_Local2.g
 #define SHADOW_MINBRIGHT					u_Local2.b
 #define SHADOW_MAXBRIGHT					u_Local2.a
 
-//#define MAP_INFO_MAXSIZE					u_Local4.r // UNUSED
+#define HAVE_CONE_ANGLES					u_Local4.r
 //#define MAP_WATER_LEVEL						u_Local4.g // UNUSED
 //#define FLOAT_TIME							u_Local4.b // UNUSED
 #define MAP_EMISSIVE_COLOR_SCALE			u_Local4.a
@@ -1452,22 +1451,6 @@ void main(void)
 #endif //!__LQ_MODE__
 	}
 
-	//
-	// SSDO input, if enabled...
-	//
-#ifdef __SSDO__
-	vec4 occlusion = vec4(0.0);
-	bool useOcclusion = false;
-#endif //__SSDO__
-
-#ifdef __SSDO__
-	if (USE_SSDO == 1.0)
-	{
-		useOcclusion = true;
-		occlusion = texture(u_HeightMap, texCoords);
-	}
-#endif //__SSDO__
-
 	if (SKY_LIGHT_CONTRIBUTION > 0.0 && cubeReflectionFactor > 0.0)
 	{// Sky light contributions...
 #ifndef __LQ_MODE__
@@ -1489,25 +1472,10 @@ void main(void)
 
 		if (phongFactor > 0.0 && NIGHT_SCALE < 1.0)
 		{// this is blinn phong
-#ifdef __SSDO__
-			float light_occlusion = 1.0;
-
-			if (useOcclusion)
-			{
-				light_occlusion = 1.0 - clamp(dot(vec4(-sunDir*E, 1.0), occlusion), 0.0, 1.0);
-			}
-#endif //__SSDO__
-
 			float maxBright = clamp(max(outColor.r, max(outColor.g, outColor.b)), 0.0, 1.0);
 			float power = clamp(pow(maxBright * 0.75, LIGHT_COLOR_POWER) + 0.333, 0.0, 1.0);
-		
 			vec3 lightColor = u_PrimaryLightColor.rgb;
-
-#ifdef __SSDO__
-			float lightMult = clamp(specularReflectivePower * power * light_occlusion, 0.0, 1.0);
-#else //!__SSDO__
 			float lightMult = clamp(specularReflectivePower * power, 0.0, 1.0);
-#endif //__SSDO__
 
 			if (lightMult > 0.0)
 			{
@@ -1563,7 +1531,7 @@ void main(void)
 					float lightDist = distance(lightPos, position.xyz);
 					float coneModifier = 1.0;
 
-					if (u_lightConeAngles[li] > 0.0)
+					if (HAVE_CONE_ANGLES > 0.0 && u_lightConeAngles[li] > 0.0)
 					{
 						vec3 coneDir = normalize(u_lightConeDirections[li]);
 
@@ -1601,20 +1569,8 @@ void main(void)
 
 								addedLight.rgb += lightColor * lightStrength * 0.333 * selfShadow;
 
-#ifdef __SSDO__
-								float light_occlusion = 1.0;
-
-								if (useOcclusion)
-								{
-									light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
-								}
-
-								vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.06, lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
-								addedLight.rgb += blinn;
-#else //!__SSDO__
 								vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.06, lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
 								addedLight.rgb += blinn;
-#endif //__SSDO__
 							}
 						}
 					}

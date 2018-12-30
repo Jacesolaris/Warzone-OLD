@@ -1542,6 +1542,7 @@ float		MOON_TEXTURE_SCALE[8] = { 1.0 };
 float		MOON_ROTATION_OFFSET_X[8] = { 0.0 };
 float		MOON_ROTATION_OFFSET_Y[8] = { 0.0 };
 char		ROAD_TEXTURE[256] = { 0 };
+qboolean	MATERIAL_SPECULAR_CHANGED = qtrue;
 float		MATERIAL_SPECULAR_STRENGTHS[MATERIAL_LAST] = { 0.0 };
 float		MATERIAL_SPECULAR_REFLECTIVENESS[MATERIAL_LAST] = { 0.0 };
 
@@ -2048,6 +2049,8 @@ void MAPPING_LoadMapInfo(void)
 	{
 		MATERIAL_SPECULAR_REFLECTIVENESS[i] = atof(IniRead(mapname, "MATERIAL_REFLECTIVENESS", va("%s", materialNames[i]), "0.0"));
 	}
+
+	MATERIAL_SPECULAR_CHANGED = qtrue;
 
 	//
 	// Moon...
@@ -2645,7 +2648,7 @@ void R_LoadMapInfo(void)
 	}
 
 
-	tr.ssdoNoiseImage = R_FindImageFile("gfx/ssdoNoise.png", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
+	//tr.ssdoNoiseImage = R_FindImageFile("gfx/ssdoNoise.png", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 
 #if 0
 	if (!R_TextureFileExists("gfx/defaultDetail.tga"))

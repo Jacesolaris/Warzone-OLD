@@ -435,11 +435,11 @@ extern cvar_t  *r_srgb;
 
 extern cvar_t  *r_depthPrepass;
 
-extern cvar_t  *r_sss;
+//extern cvar_t  *r_sss;
 
-extern cvar_t  *r_ssdo;
-extern cvar_t  *r_ssdoBaseRadius;
-extern cvar_t  *r_ssdoMaxOcclusionDist;
+//extern cvar_t  *r_ssdo;
+//extern cvar_t  *r_ssdoBaseRadius;
+//extern cvar_t  *r_ssdoMaxOcclusionDist;
 
 extern cvar_t  *r_normalMapping;
 extern cvar_t  *r_normalMappingReal;
@@ -1800,7 +1800,7 @@ typedef enum
 	UNIFORM_VLIGHTCOLORS,
 
 	UNIFORM_SAMPLES,
-	UNIFORM_SSDO_KERNEL,
+	//UNIFORM_SSDO_KERNEL,
 
 	UNIFORM_COUNT
 } uniform_t;
@@ -2921,7 +2921,7 @@ typedef struct trGlobals_s {
 
 	image_t					*awesomiumuiImage;
 
-	image_t					*ssdoNoiseImage;
+	//image_t					*ssdoNoiseImage;
 
 	FBO_t					*renderFbo;
 	FBO_t					*renderDepthFbo;
@@ -3041,8 +3041,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t surfaceSpriteShader;
 	//shaderProgram_t sssShader;
 	//shaderProgram_t sssBlurShader;
-	shaderProgram_t ssdoShader;
-	shaderProgram_t ssdoBlurShader;
+	//shaderProgram_t ssdoShader;
+	//shaderProgram_t ssdoBlurShader;
 	shaderProgram_t generateNormalMapShader;
 	shaderProgram_t darkexpandShader;
 	shaderProgram_t magicdetailShader;
@@ -3129,15 +3129,15 @@ typedef struct trGlobals_s {
 	FBO_t		   *ssaoFbo;
 	image_t        *ssaoImage;
 
-	FBO_t		   *ssdoFbo1;
-	FBO_t		   *ssdoFbo2;
-	image_t        *ssdoImage1;
-	image_t        *ssdoImage2;
+	//FBO_t		   *ssdoFbo1;
+	//FBO_t		   *ssdoFbo2;
+	//image_t        *ssdoImage1;
+	//image_t        *ssdoImage2;
 	
-	FBO_t		   *sssFbo1;
-	FBO_t		   *sssFbo2;
-	image_t        *sssImage1;
-	image_t        *sssImage2;
+	//FBO_t		   *sssFbo1;
+	//FBO_t		   *sssFbo2;
+	//image_t        *sssImage1;
+	//image_t        *sssImage2;
 
 	FBO_t		   *ssdmFbo;
 	image_t        *ssdmImage;
@@ -3371,9 +3371,9 @@ extern  cvar_t  *r_srgb;
 
 extern  cvar_t  *r_depthPrepass;
 
-extern cvar_t  *r_ssdo;
-extern cvar_t  *r_ssdoBaseRadius;
-extern cvar_t  *r_ssdoMaxOcclusionDist;
+//extern cvar_t  *r_ssdo;
+//extern cvar_t  *r_ssdoBaseRadius;
+//extern cvar_t  *r_ssdoMaxOcclusionDist;
 
 extern  cvar_t  *r_normalMapping;
 extern cvar_t  *r_normalMapQuality;
