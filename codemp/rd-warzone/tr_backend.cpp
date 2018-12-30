@@ -3772,7 +3772,7 @@ const void *RB_PostProcess(const void *data)
 				RB_GenerateVolumeLightImage();
 				DEBUG_EndTimer(qtrue);
 
-				DEBUG_StartTimer("Volume Combine", qtrue);
+				DEBUG_StartTimer("Volumetric Light Combine", qtrue);
 				if (RB_VolumetricLight(currentFbo, srcBox, currentOutFbo, dstBox))
 					RB_SwapFBOs(&currentFbo, &currentOutFbo);
 				DEBUG_EndTimer(qtrue);
@@ -3833,7 +3833,11 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_EndTimer(qtrue);
 		}
 
-		FBO_BlitFromTexture(tr.renderGUIImage, srcBox, NULL, currentFbo, dstBox, NULL, NULL, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+		extern qboolean menuOpen;
+		if (menuOpen)
+		{
+			FBO_BlitFromTexture(tr.renderGUIImage, srcBox, NULL, currentFbo, dstBox, NULL, NULL, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+		}
 
 #if 0
 		if (SCREEN_BLUR_MENU)

@@ -1,7 +1,6 @@
 #define __HIGH_PASS_SHARPEN__
 #define __CLOUDS__
 #define __BACKGROUND_HILLS__
-#define __NEW_STARS__
 
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
 
@@ -39,10 +38,10 @@ uniform vec4											u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL,
 #define USE_ISDETAIL									u_Settings3.g
 #define USE_DETAIL_COORD								u_Settings3.b
 
-uniform vec4											u_Local1; // PROCEDURAL_SKY_ENABLED, DAY_NIGHT_24H_TIME/24.0, PROCEDURAL_SKY_STAR_DENSITY, materialType
+uniform vec4											u_Local1; // PROCEDURAL_SKY_ENABLED, DAY_NIGHT_24H_TIME/24.0, PROCEDURAL_SKY_STAR_DENSITY, PROCEDURAL_SKY_NEBULA_SEED
 uniform vec4											u_Local2; // PROCEDURAL_CLOUDS_ENABLED, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK
 uniform vec4											u_Local3; // PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT
-uniform vec4											u_Local4; // PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, PROCEDURAL_SKY_PLANETARY_ROTATION, PROCEDURAL_SKY_DARKMATTER_FACTOR
+uniform vec4											u_Local4; // PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, PROCEDURAL_SKY_PLANETARY_ROTATION, PROCEDURAL_SKY_NEBULA_FACTOR
 uniform vec4											u_Local5; // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky draws only!
 uniform vec4											u_Local6; // PROCEDURAL_SKY_DAY_COLOR
 uniform vec4											u_Local7; // PROCEDURAL_SKY_NIGHT_COLOR
@@ -55,7 +54,7 @@ uniform vec4											u_Local12; // PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR
 #define PROCEDURAL_SKY_ENABLED							u_Local1.r
 #define DAY_NIGHT_24H_TIME								u_Local1.g
 #define PROCEDURAL_SKY_STAR_DENSITY						u_Local1.b
-#define SHADER_MATERIAL_TYPE							u_Local1.a
+#define PROCEDURAL_SKY_NEBULA_SEED						u_Local1.a
 
 #define CLOUDS_ENABLED									u_Local2.r
 #define CLOUDS_CLOUDSCALE								u_Local2.g
@@ -70,7 +69,7 @@ uniform vec4											u_Local12; // PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR
 #define PROCEDURAL_SKY_NIGHT_HDR_MIN					u_Local4.r
 #define PROCEDURAL_SKY_NIGHT_HDR_MAX					u_Local4.g
 #define PROCEDURAL_SKY_PLANETARY_ROTATION				u_Local4.b
-#define PROCEDURAL_SKY_DARKMATTER_FACTOR				u_Local4.a
+#define PROCEDURAL_SKY_NEBULA_FACTOR				u_Local4.a
 
 #define SHADER_DAY_NIGHT_ENABLED						u_Local5.r
 #define SHADER_NIGHT_SCALE								u_Local5.g
@@ -387,17 +386,25 @@ vec3 Clouds(in vec2 fragCoord, vec3 skycolour)
 }
 #endif //__CLOUDS__
 
-#ifdef __NEW_STARS__
-vec3 reachForTheStars(in vec3 from, in vec3 dir, int levels, float power) 
+vec3 reachForTheNebulas(in vec3 from, in vec3 dir, float level, float power) 
 {
-	vec3 color=vec3(0.0);
-	vec3 st = (dir * 2.+ vec3(0.3,2.5,1.25)) * .3;
-	for (int i = 0; i < levels; i++) st = abs(st) / dot(st,st) - .9;
-    float star = min( 1., pow( min( 5., length(st) ), 3. ) * .0025 )*1.5;
+    vec3 color = vec3(0.0);
+    float nebula = pow(SmoothNoise(dir+vec3(PROCEDURAL_SKY_NEBULA_SEED)), 12.0 / (1.0 - clamp(PROCEDURAL_SKY_NEBULA_FACTOR, 0.0, 0.999)));
+    
+    if (nebula > 0.0)
+    {
+    	vec3 pos = (dir.xyz + dir.xzy + dir.zyx) / 3.0;
+    	vec3 randc = vec3(SmoothNoise( dir.xyz*10.0*level));
+		color = nebula * randc;
+    }
 
-   	vec3 randc = vec3(SmoothNoise( dir.xyz*10.0*float(levels) ), SmoothNoise( dir.xzy*10.0*float(levels) ), SmoothNoise( dir.yzx*10.0*float(levels) ));
-	color += star * randc;
+	return pow(color*2.25, vec3(power));
+}
 
+vec3 reachForTheStars(in vec3 from, in vec3 dir, float power) 
+{
+	float star = pow(SmoothNoise(dir*320.0), 48.0 - clamp(PROCEDURAL_SKY_STAR_DENSITY, 0.0, 16.0));
+	vec3 color = vec3(star);
 	return pow(color*2.25, vec3(power));
 }
 
@@ -414,95 +421,26 @@ void GetStars(out vec4 fragColor, in vec3 position)
 	dir.xy += dnt * PROCEDURAL_SKY_PLANETARY_ROTATION;
 
 	// Nebulae...
-	vec3 color1 = clamp(reachForTheStars(from, -dir, 1, 0.5) * 0.7, 0.0, 1.0) * vec3(0.0, 0.0, 1.0);
-	vec3 color2 = clamp(reachForTheStars(from, dir, 2, 0.5) * 0.6, 0.0, 1.0) * vec3(1.0, 0.0, 0.0);
-	vec3 color3 = clamp(reachForTheStars(from, dir, 3, 0.5) * 0.4, 0.0, 1.0) * vec3(1.0, 1.0, 0.0);
+	vec3 color1=clamp(reachForTheNebulas(from, dir, 1.0, 0.5) * 1.5, 0.0, 1.0) * vec3(0.0, 0.0, 1.0);
+    vec3 color2=clamp(reachForTheNebulas(from, dir, 2.0, 0.5) * 1.5, 0.0, 1.0) * vec3(0.0, 1.0, 1.0);
+	
+    vec3 color3=clamp(reachForTheNebulas(from, -dir, 2.0, 0.5) * 0.9, 0.0, 1.0) * vec3(1.0, 0.0, 0.0);
+    vec3 color4=clamp(reachForTheNebulas(from, -dir, 3.0, 0.5) * 0.7, 0.0, 1.0) * vec3(1.0, 1.0, 0.0);
+    
+    vec3 color5=clamp(reachForTheNebulas(from, dir.yxz+dir.yzx, 1.5, 0.9) * 0.9, 0.0, 1.0) * vec3(0.0, 1.0, 0.0);
+    vec3 color6=clamp(reachForTheNebulas(from, dir.yxz+dir.yzx, 2.5, 0.7) * 0.7, 0.0, 1.0) * vec3(0.25, 0.75, 0.0);
 
 	// Small stars...
-	vec3 colorStars = clamp(reachForTheStars(from, dir, 17/*13*/, 0.9), 0.0, 1.0);
-	// bias stars toward white...
-	float starStrength = max(colorStars.r, max(colorStars.g, colorStars.b));
-	colorStars = mix(colorStars, vec3(1.0), clamp(1.85 * starStrength, 0.0, 1.0));
+	vec3 colorStars = clamp(reachForTheStars(from, dir, 0.9), 0.0, 1.0);
 
 	// Add them all together...
-	color = color1 + color2 + color3 + colorStars;
+	color = color1 + color2 + color3 + color4 + color5 + color6 + colorStars;
 
 	color = clamp(color, 0.0, 1.0);
 	color = pow(color, vec3(1.2));
 
 	fragColor = vec4(color, 1.0);
 }
-#else //!__NEW_STARS__
-void GetStars(out vec4 fragColor, in vec3 position)
-{
-#define iterations 14
-#define formuparam 0.530
-#define volsteps int(clamp(PROCEDURAL_SKY_STAR_DENSITY, 1.0, 18.0))
-#define stepsize 0.2
-
-#define zoom   0.800
-#define tile   0.850
-
-#define brightness 0.0015
-#define darkmatter PROCEDURAL_SKY_DARKMATTER_FACTOR//0.400
-#define distfading 0.760
-#define saturation 0.800
-
-    float zoomFactor = .3;
-
-	vec3 pos = position;
-
-	vec3 x = pos.xyz / length(pos.xyz);
-	vec2 fragCoord = x.xy * u_Dimensions;
-
-	//get coords and direction
-	vec2 uv=fragCoord.xy/u_Dimensions.xy*zoomFactor-0.001;
-	
-	vec3 dir=vec3((uv+0.025)*zoom,1000.0 + (0.22 * x.z));
-	
-	float a1=0.0;
-	mat2 rot1=mat2(cos(a1),tan(a1),-sin(a1),cos(a1));
-	mat2 rot2=rot1;
-	dir.xz*=rot1;
-	dir.xy*=rot2;
-
-	// Adjust for planetary rotation...
-	float dnt = DAY_NIGHT_24H_TIME * 2.0 - 1.0;
-	if (dnt <= 0.0) dnt = 1.0 + (1.0 - length(dnt));
-	dir.xy += dnt * PROCEDURAL_SKY_PLANETARY_ROTATION;
-	
-	vec3 from=vec3(0.,1.,0.);
-	from+=vec3((tan(.15),.152,-2.));
-	
-	from.xz*=rot1;
-	from.xy*=rot2;
-	
-	//volumetric rendering
-	float s=.4,fade=.2;
-	vec3 v=vec3(0.8);
-	for (int r=0; r<volsteps; r++) {
-		vec3 p=from+s*dir*.5;
-		p = abs(vec3(tile)-mod(p,vec3(tile*2.))); // tiling fold
-		float pa,a=pa=0.;
-		for (int i=0; i<iterations; i++) { 
-			p=abs(p)/dot(p,p)-formuparam; // the magic formula
-			a+=abs(length(p)-pa); // absolute sum of average change
-			pa=length(p);
-		}
-		float dm=max(0.,darkmatter-a*a*tan(.001)); //dark matter
-		a*=a*a*2.; // add contrast
-		if (r>3) fade*=1.-dm; // dark matter, don't render near
-		//v+=vec3(dm,dm*.5,0.);
-		v+=fade;
-		v+=vec3(s,s*s,s*s*s*s)*a*brightness*fade; // coloring based on distance
-		fade*=distfading; // distance fading
-		s+=stepsize;
-	}
-	v=mix(vec3(length(v)),v,saturation); //color adjust
-    
-	fragColor = vec4(v*.01,1.);
-}
-#endif //__NEW_STARS__
 
 void GetSun(out vec4 fragColor, in vec3 position)
 {
@@ -776,7 +714,7 @@ void main()
 #define night_const_1 (PROCEDURAL_SKY_NIGHT_HDR_MIN / 255.0)
 #define night_const_2 (255.0 / PROCEDURAL_SKY_NIGHT_HDR_MAX)
 
-		if (SHADER_MATERIAL_TYPE == 1024.0 && terrainColor.a != 1.0)
+		if (/*SHADER_MATERIAL_TYPE == 1024.0 &&*/ terrainColor.a != 1.0)
 		{// This is sky, and aurora is enabled...
 			if (SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.0)
 			{// Day/Night cycle is enabled, and some night sky contribution is required...
@@ -813,6 +751,7 @@ void main()
 					vec3 skyViewDir2 = normalize(u_ViewOrigin.xzy - var_Position.xzy);
 					vec3 skySunDir = normalize(lightPosition);
 					vec3 atmos = extra_cheap_atmosphere(skyViewDir, skyViewDir2, -skySunDir, sunColorMod);
+					atmos = atmos * 1.75; // boost it at night a bit...
 					nightDiffuse = mix(atmos, nightDiffuse, atmosMix);
 				}
 
@@ -920,7 +859,7 @@ void main()
 
 	gl_FragColor.a = 1.0; // just force it.
 	
-	if (SHADER_MATERIAL_TYPE == 1024.0 && SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.7 && terrainColor.a != 1.0)
+	if (/*SHADER_MATERIAL_TYPE == 1024.0 &&*/ SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.7 && terrainColor.a != 1.0)
 	{// Add night sky to glow map...
 		out_Glow = vec4(nightGlow, gl_FragColor.a);
 

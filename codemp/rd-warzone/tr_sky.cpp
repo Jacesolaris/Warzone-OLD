@@ -394,7 +394,8 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 	extern float		PROCEDURAL_SKY_NIGHT_HDR_MIN;
 	extern float		PROCEDURAL_SKY_NIGHT_HDR_MAX;
 	extern int			PROCEDURAL_SKY_STAR_DENSITY;
-	extern float		PROCEDURAL_SKY_DARKMATTER_FACTOR;
+	extern float		PROCEDURAL_SKY_NEBULA_FACTOR;
+	extern float		PROCEDURAL_SKY_NEBULA_SEED;
 	extern float		PROCEDURAL_SKY_PLANETARY_ROTATION;
 
 	extern qboolean		PROCEDURAL_BACKGROUND_HILLS_ENABLED;
@@ -554,8 +555,8 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 			else if (tr.viewParms.flags & VPF_SKYCUBENIGHT)
 				dayNight24 = 0.0;
 
-			VectorSet4(vector, PROCEDURAL_SKY_ENABLED ? 1.0 : 0.0, dayNight24, PROCEDURAL_SKY_STAR_DENSITY, 1024.0);
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // 0.0, 0.0, 0.0, materialType
+			VectorSet4(vector, PROCEDURAL_SKY_ENABLED ? 1.0 : 0.0, dayNight24, PROCEDURAL_SKY_STAR_DENSITY, PROCEDURAL_SKY_NEBULA_SEED);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // 0.0, 0.0, 0.0, PROCEDURAL_SKY_NEBULA_SEED
 
 			VectorSet4(vector, (PROCEDURAL_CLOUDS_ENABLED && !PROCEDURAL_CLOUDS_LAYER) ? 1.0 : 0.0, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector);
@@ -563,7 +564,7 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 			VectorSet4(vector, PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector);
 
-			VectorSet4(vector, PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, PROCEDURAL_SKY_PLANETARY_ROTATION, Q_clamp(0.0, 1.0 - PROCEDURAL_SKY_DARKMATTER_FACTOR, 1.0));
+			VectorSet4(vector, PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, PROCEDURAL_SKY_PLANETARY_ROTATION, Q_clamp(0.0, 1.0 - PROCEDURAL_SKY_NEBULA_FACTOR, 1.0));
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector);
 
 			float auroraEnabled = 0.0;

@@ -1406,7 +1406,8 @@ vec4_t		PROCEDURAL_SKY_NIGHT_COLOR = { 1.0f };
 float		PROCEDURAL_SKY_NIGHT_HDR_MIN = { 1.0f };
 float		PROCEDURAL_SKY_NIGHT_HDR_MAX = { 255.0f };
 int			PROCEDURAL_SKY_STAR_DENSITY = 8;
-float		PROCEDURAL_SKY_DARKMATTER_FACTOR = 0.6;
+float		PROCEDURAL_SKY_NEBULA_FACTOR = 0.6;
+float		PROCEDURAL_SKY_NEBULA_SEED = 0.0;
 float		PROCEDURAL_SKY_PLANETARY_ROTATION = 0.3;
 qboolean	PROCEDURAL_BACKGROUND_HILLS_ENABLED = qtrue;
 float		PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS = 0.4;
@@ -1713,7 +1714,8 @@ void MAPPING_LoadMapInfo(void)
 	PROCEDURAL_SKY_NIGHT_HDR_MAX = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NIGHT_HDR_MAX", "280.0"));
 
 	PROCEDURAL_SKY_STAR_DENSITY = atoi(IniRead(mapname, "SKY", "PROCEDURAL_SKY_STAR_DENSITY", "8"));
-	PROCEDURAL_SKY_DARKMATTER_FACTOR = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_DARKMATTER_FACTOR", "0.6"));
+	PROCEDURAL_SKY_NEBULA_FACTOR = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NEBULA_FACTOR", "0.6"));
+	PROCEDURAL_SKY_NEBULA_SEED = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NEBULA_SEED", "0.0"));
 	PROCEDURAL_SKY_PLANETARY_ROTATION = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_PLANETARY_ROTATION", "0.3"));
 
 	PROCEDURAL_BACKGROUND_HILLS_ENABLED = (atoi(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_ENABLED", PROCEDURAL_SKY_ENABLED ? "1" : "0")) > 0) ? qtrue : qfalse;
@@ -2303,8 +2305,8 @@ void MAPPING_LoadMapInfo(void)
 
 		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky is ^7%s^5 on this map.\n", PROCEDURAL_SKY_ENABLED ? "ENABLED" : "DISABLED");
 		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural day sky color is ^7%.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_SKY_DAY_COLOR[0], PROCEDURAL_SKY_DAY_COLOR[1], PROCEDURAL_SKY_DAY_COLOR[2]);
-		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky star density is ^7%i^5 and dark matter factor is ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_STAR_DENSITY, PROCEDURAL_SKY_DARKMATTER_FACTOR);
-		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky planetary rotation rate is ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_PLANETARY_ROTATION);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky star density is ^7%i^5 and nebula factor is ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_STAR_DENSITY, PROCEDURAL_SKY_NEBULA_FACTOR);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky planetary rotation rate is ^7%.4f^5 and nebula seed is ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_PLANETARY_ROTATION, PROCEDURAL_SKY_NEBULA_SEED);
 		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural night sky color is ^7%.4f %.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_SKY_NIGHT_COLOR[0], PROCEDURAL_SKY_NIGHT_COLOR[1], PROCEDURAL_SKY_NIGHT_COLOR[2], PROCEDURAL_SKY_NIGHT_COLOR[3]);
 		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural night sky HDR minimum is ^7%.4f^5 and procedural night sky HDR maximum is  ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX);
 		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills are ^7%s^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_ENABLED ? "ENABLED" : "DISABLED");
