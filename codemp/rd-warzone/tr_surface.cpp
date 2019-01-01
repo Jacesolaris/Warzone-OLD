@@ -2428,6 +2428,9 @@ static void RB_SurfaceVBOMesh(srfBspSurface_t * srf)
 }
 
 shader_t *prevShader = NULL;
+#if 0
+matrix_t oldMDVmodelview = { 0 };
+#endif
 
 void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)
 {
@@ -2456,21 +2459,123 @@ void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)
 		vertexAttribsInterpolation = refEnt->backlerp;
 	}
 
-	/*if (tess.numIndexes + surface->numIndexes > SHADER_MAX_INDEXES
-		|| tess.numVertexes + surface->numVerts > SHADER_MAX_VERTEXES
-		|| vertexAttribsInterpolation != refEnt->backlerp
-		|| glState.vertexAttribsOldFrame != refEnt->oldframe
-		|| glState.vertexAttribsNewFrame != refEnt->frame
-		|| !glState.vertexAnimation
-		|| tess.shader != prevShader
-		|| surface->vbo != glState.currentVBO
-		|| surface->ibo != glState.currentIBO
-		|| tess.useInternalVBO != useInternalVBO)
+#if 0
+	/* if the modelView matrix has not changed, then we can merge with the previous draw */
+	qboolean matrixChanged = qfalse;
+
+	for (int i = 0; i < 16; i++)
 	{
-		contextChanged = qtrue;
+		if (glState.modelview[i] != oldMDVmodelview[i])
+		{
+			matrixChanged = qtrue;
+			memcpy(oldMDVmodelview, glState.modelview, sizeof(glState.modelview));
+			break;
+		}
 	}
 
-	if (contextChanged)*/
+	if (!matrixChanged/*useInternalVBO*/)
+	{
+		int i, mergeForward, mergeBack;
+		int firstIndex = 0;
+		GLvoid *firstIndexOffset, *lastIndexOffset;
+
+		RB_CheckVBOandIBO(surface->vbo, surface->ibo);
+
+#ifdef __PSHADOWS__
+		tess.pshadowBits = 0;
+#endif
+
+		// merge this into any existing multidraw primitives
+		mergeForward = -1;
+		mergeBack = -1;
+		firstIndexOffset = BUFFER_OFFSET(firstIndex * sizeof(glIndex_t));
+		lastIndexOffset = BUFFER_OFFSET((firstIndex + surface->numIndexes) * sizeof(glIndex_t));
+
+		if (r_mergeMultidraws->integer)
+		{
+			i = 0;
+
+			if (r_mergeMultidraws->integer == 1)
+			{
+				// lazy merge, only check the last primitive
+				if (tess.multiDrawPrimitives)
+				{
+					i = tess.multiDrawPrimitives - 1;
+				}
+			}
+
+			for (; i < tess.multiDrawPrimitives; i++)
+			{
+				if (tess.multiDrawLastIndex[i] == firstIndexOffset)
+				{
+					mergeBack = i;
+				}
+
+				if (lastIndexOffset == tess.multiDrawFirstIndex[i])
+				{
+					mergeForward = i;
+				}
+			}
+		}
+
+		if (mergeBack != -1 && mergeForward == -1)
+		{
+			tess.multiDrawNumIndexes[mergeBack] += surface->numIndexes;
+			tess.multiDrawLastIndex[mergeBack] = tess.multiDrawFirstIndex[mergeBack] + tess.multiDrawNumIndexes[mergeBack];
+			tess.multiDrawMinIndex[mergeBack] = MIN(tess.multiDrawMinIndex[mergeBack], surface->minIndex);
+			tess.multiDrawMaxIndex[mergeBack] = MAX(tess.multiDrawMaxIndex[mergeBack], surface->maxIndex);
+			backEnd.pc.c_multidrawsMerged++;
+		}
+		else if (mergeBack == -1 && mergeForward != -1)
+		{
+			tess.multiDrawNumIndexes[mergeForward] += surface->numIndexes;
+			tess.multiDrawFirstIndex[mergeForward] = (glIndex_t *)firstIndexOffset;
+			tess.multiDrawLastIndex[mergeForward] = tess.multiDrawFirstIndex[mergeForward] + tess.multiDrawNumIndexes[mergeForward];
+			tess.multiDrawMinIndex[mergeForward] = MIN(tess.multiDrawMinIndex[mergeForward], surface->minIndex);
+			tess.multiDrawMaxIndex[mergeForward] = MAX(tess.multiDrawMaxIndex[mergeForward], surface->maxIndex);
+			backEnd.pc.c_multidrawsMerged++;
+		}
+		else if (mergeBack != -1 && mergeForward != -1)
+		{
+			tess.multiDrawNumIndexes[mergeBack] += surface->numIndexes + tess.multiDrawNumIndexes[mergeForward];
+			tess.multiDrawLastIndex[mergeBack] = tess.multiDrawFirstIndex[mergeBack] + tess.multiDrawNumIndexes[mergeBack];
+			tess.multiDrawMinIndex[mergeBack] = MIN(tess.multiDrawMinIndex[mergeBack], MIN(tess.multiDrawMinIndex[mergeForward], surface->minIndex));
+			tess.multiDrawMaxIndex[mergeBack] = MAX(tess.multiDrawMaxIndex[mergeBack], MAX(tess.multiDrawMaxIndex[mergeForward], surface->maxIndex));
+			tess.multiDrawPrimitives--;
+
+			if (mergeForward != tess.multiDrawPrimitives)
+			{
+				tess.multiDrawNumIndexes[mergeForward] = tess.multiDrawNumIndexes[tess.multiDrawPrimitives];
+				tess.multiDrawFirstIndex[mergeForward] = tess.multiDrawFirstIndex[tess.multiDrawPrimitives];
+			}
+			backEnd.pc.c_multidrawsMerged += 2;
+		}
+		else if (mergeBack == -1 && mergeForward == -1)
+		{
+			tess.multiDrawNumIndexes[tess.multiDrawPrimitives] = surface->numIndexes;
+			tess.multiDrawFirstIndex[tess.multiDrawPrimitives] = (glIndex_t *)firstIndexOffset;
+			tess.multiDrawLastIndex[tess.multiDrawPrimitives] = (glIndex_t *)lastIndexOffset;
+			tess.multiDrawMinIndex[tess.multiDrawPrimitives] = surface->minIndex;
+			tess.multiDrawMaxIndex[tess.multiDrawPrimitives] = surface->maxIndex;
+			tess.multiDrawPrimitives++;
+		}
+
+		glState.vertexAttribsInterpolation = vertexAttribsInterpolation;
+		glState.vertexAttribsOldFrame = refEnt->oldframe;
+		glState.vertexAttribsNewFrame = refEnt->frame;
+
+		tess.useInternalVBO = useInternalVBO;
+
+		glState.vertexAnimation = qtrue;
+
+		backEnd.pc.c_multidraws++;
+
+		tess.numIndexes += surface->numIndexes;
+		tess.numVertexes += surface->numVerts;
+		return;
+	}
+#endif
+
 	{
 		RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
 

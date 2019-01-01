@@ -104,6 +104,7 @@ vec2 EncodeNormal(vec3 n)
 #endif //__ENCODE_NORMALS_RECONSTRUCT_Z__
 
 
+#if 1
 const mat2 mc = mat2(1.6, 1.2, -1.2, 1.6);
 
 vec2 hash(vec2 p) {
@@ -204,6 +205,7 @@ vec4 Clouds(in vec2 fragCoord)
 	return vec4(result.rgb, clamp(f + c, 0.0, 1.0));
 }
 
+
 void main()
 {
 	vec3 pViewDir = normalize(u_ViewOrigin - var_vertPos.xyz);
@@ -229,3 +231,129 @@ void main()
 	out_Position = vec4(0.0);
 	out_Normal = vec4(0.0);
 }
+#else
+#define time u_Time
+
+float hash (vec2 p)
+{
+	p  = fract(p * vec2(5.3983, 5.4427));
+    p += dot(p.yx, p.xy + vec2(21.5351, 14.3137));
+	return fract(p.x * p.y * 95.4337);
+}
+
+float noise (in vec2 p)
+{
+    vec2 i = floor( p );
+    vec2 f = fract( p );
+	vec2 u = f*f*(3.0-2.0*f);
+    return -1.0+2.0*mix( mix( hash( i + vec2(0.0,0.0) ), 
+                     hash( i + vec2(1.0,0.0) ), u.x),
+                mix( hash( i + vec2(0.0,1.0) ), 
+                     hash( i + vec2(1.0,1.0) ), u.x), u.y);
+}
+
+vec3 lgt = normalize(u_PrimaryLightOrigin.xzy);
+vec3 hor = vec3(0.0);
+
+float nz (in vec2 p)
+{
+	return noise(p*2.0);
+}
+
+mat2 m2 = mat2( 0.80,  0.60, -0.60,  0.80 );
+float fbm(in vec2 p, in float d)
+{	
+	d = smoothstep(0.,100.,d);
+    p *= .3/(d+0.2);
+    float z=2.;
+	float rz = 0.;
+    p  -= time*0.02;
+	for (float i= 1.;i <=5.;i++ )
+	{
+		rz+= (sin(nz(p)*6.5)*0.5+0.5)*1.25/z;
+		z *= 2.1;
+		p *= 2.15;
+        p += time*0.027;
+        p *= m2;
+	}
+    return pow(abs(rz),2.-d);
+}
+
+vec4 clouds(in vec3 ro, in vec3 rd, in bool wtr)
+{
+    float sun = clamp(dot(lgt, rd),0.0,1.0 );
+    hor = mix( 1.*vec3(0.70,1.0,1.0), vec3(1.3,0.55,0.15), 0.25+0.75*sun );
+    vec3 col = mix( vec3(0.5,0.75,1.), hor, exp(-(4.+ 2.*(1.-sun))*max(0.0,rd.y-0.05)) );
+    col *= 0.4;
+    
+	if (!wtr)
+    {
+        col += 0.8*vec3(1.0,0.8,0.7)*pow(sun,512.0);
+        col += 0.2*vec3(1.0,0.4,0.2)*pow(sun,32.0);
+    }
+    else 
+    {
+        col += 1.5*vec3(1.0,0.8,0.7)*pow(sun,512.0);
+        col += 0.3*vec3(1.0,0.4,0.2)*pow(sun,32.0);
+    }
+
+
+    col += 0.1*vec3(1.0,0.4,0.2)*pow(sun,4.0);
+    float pt = (90.0-ro.y)/rd.y;
+    vec3 bpos = ro + pt*rd;
+    float dist = sqrt(distance(ro,bpos));
+    float s2p = distance(bpos,lgt*100.);
+    const float cls = 0.002;
+    float bz = fbm(bpos.xz*cls,dist);
+    float tot = bz;
+    const float stm = .0;
+    const float stx = 1.15;
+    tot = smoothstep(stm,stx,tot);
+    float ds = 2.;
+    for (float i=0.;i<=3.;i++)
+    {
+        vec3 pp = bpos + ds*lgt;
+        float v = fbm(pp.xz*cls,dist);
+        v = smoothstep(stm,stx,v);
+        tot += v;
+        #ifndef BASIC_CLOUDS
+        ds *= .14*dist;
+        #endif
+    }
+
+    col = mix(col,vec3(.5,0.5,0.55)*0.2,pow(bz,1.5));
+    tot = smoothstep(-7.5,-0.,1.-tot);
+    vec3 sccol = mix(vec3(0.11,0.1,0.2),vec3(.2,0.,0.1),smoothstep(0.,900.,s2p));
+    col = mix(col,sccol,1.-tot)*1.6;
+    vec3 sncol = mix(vec3(1.4,0.3,0.),vec3(1.5,.65,0.),smoothstep(0.,1200.,s2p));
+    float sd = pow(sun,10.)+.7;
+    col += sncol*bz*bz*bz*tot*tot*tot*sd;
+    if (wtr) col = mix(col,vec3(0.5,0.7,1.)*0.3,0.4);
+    //make the water blue-er
+    return vec4(col,tot);
+}
+
+void main()
+{
+	vec3 pViewDir = normalize(var_vertPos.xzy);
+
+	vec4 cloudColor = clouds(vec3(0.0), pViewDir, false);
+
+	if (SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.0)
+	{// Adjust cloud color at night...
+		float nMult = clamp(1.25 - SHADER_NIGHT_SCALE, 0.0, 1.0);
+		cloudColor *= nMult;
+	}
+
+	gl_FragColor = cloudColor;
+	out_Glow = vec4(0.0);
+	//out_Normal = vec4(EncodeNormal(var_Normal), 0.0, 1.0);
+#ifdef __USE_REAL_NORMALMAPS__
+	out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
+	//out_Position = vec4(var_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
+
+	out_Position = vec4(0.0);
+	out_Normal = vec4(0.0);
+}
+#endif

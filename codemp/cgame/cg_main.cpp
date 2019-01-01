@@ -1772,6 +1772,9 @@ static void CG_RegisterGameAssets( void ) {
 	{// UQ1: This is the slowest section, so I will do percentage complete bar here (cg.loadLCARSStage)...
 		cg.loadLCARSStage = 1;
 
+		// Pre-load kyle model...
+		trap->R_RegisterModel("models/players/kyle/model.glm");
+
 		CG_LoadingString("Game models");
 
 		for (i = 1; i < MAX_MODELS; i++)

@@ -3783,7 +3783,10 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (!i)
 			Q_strcat(extradefines, 1024, "#define FIRST_PASS\n");
 
-		if (!GLSL_BeginLoadGPUShader(&tr.calclevels4xShader[i], va("calclevels4x%i", i), attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_calclevels4x_vp, fallbackShader_calclevels4x_fp, NULL, NULL, NULL))
+		char shaderName[128] = { 0 };
+		sprintf(shaderName, "calclevels4x%i", i);
+
+		if (!GLSL_BeginLoadGPUShader(&tr.calclevels4xShader[i], shaderName, attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_calclevels4x_vp, fallbackShader_calclevels4x_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load calclevels4x%i shader!", i);
 		}
@@ -3863,8 +3866,9 @@ int GLSL_BeginLoadGPUShaders(void)
 		else
 			Q_strcat(extradefines, 1024, "#define USE_HORIZONTAL_BLUR\n");
 
-
-		if (!GLSL_BeginLoadGPUShader(&tr.depthBlurShader[i], va("depthBlur%i", i), attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_depthblur_vp, fallbackShader_depthblur_fp, NULL, NULL, NULL))
+		char shaderName[128] = { 0 };
+		sprintf(shaderName, "depthBlur%i", i);
+		if (!GLSL_BeginLoadGPUShader(&tr.depthBlurShader[i], shaderName, attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_depthblur_vp, fallbackShader_depthblur_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load depthBlur%i shader!", i);
 		}

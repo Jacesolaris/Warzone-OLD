@@ -5,7 +5,7 @@
 #include "../compose_models.h"
 #include "../tr_debug.h"
 
-qboolean model_upload_mdxm_to_gpu(model_t *mod);
+qboolean model_upload_mdxm_to_gpu(model_t *mod, qboolean isKyle);
 
 void DockMDXM::imgui_mdxm_list_surfhierarchy() {
 	mdxmSurfHierarchy_t *surfHierarchy = firstSurfHierarchy(header);
@@ -82,12 +82,12 @@ void DockMDXM::imgui_mdxm_surface(mdxmSurface_t *surf) {
 
 		if (ImGui::Button("verts *= 2")) {
 			scaleVertices(surf, 2.0);
-			model_upload_mdxm_to_gpu(mod);
+			model_upload_mdxm_to_gpu(mod, qfalse);
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("verts /= 2")) {
 			scaleVertices(surf, 0.5);
-			model_upload_mdxm_to_gpu(mod);
+			model_upload_mdxm_to_gpu(mod, qfalse);
 		}
 
 		imgui_mdxm_surface_vertices(surf);
