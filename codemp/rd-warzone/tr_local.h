@@ -3074,7 +3074,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t bloomDarkenShader;
 	shaderProgram_t bloomBlurShader;
 	shaderProgram_t bloomCombineShader;
-	shaderProgram_t lensflareShader;
+	//shaderProgram_t lensflareShader;
 	shaderProgram_t multipostShader;
 	shaderProgram_t anamorphicDarkenShader;
 	shaderProgram_t anamorphicBlurShader;

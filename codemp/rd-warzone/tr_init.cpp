@@ -1663,7 +1663,7 @@ void R_Register( void )
 	r_bloomPasses = ri->Cvar_Get( "r_bloomPasses", "1", CVAR_ARCHIVE );
 	r_bloomDarkenPower = ri->Cvar_Get( "r_bloomDarkenPower", "5.0", CVAR_ARCHIVE );
 	r_bloomScale = ri->Cvar_Get( "r_bloomScale", "1.5", CVAR_ARCHIVE );
-	r_lensflare = ri->Cvar_Get( "r_lensflare", "false", CVAR_ARCHIVE );
+	r_lensflare = ri->Cvar_Get( "r_lensflare", "true", CVAR_ARCHIVE );
 	//r_bloomRays = ri->Cvar_Get("r_bloomRays", "1", CVAR_ARCHIVE);
 	r_bloomRaysSamples = ri->Cvar_Get("r_bloomRaysSamples", "24", CVAR_ARCHIVE);
 	r_bloomRaysDecay = ri->Cvar_Get("r_bloomRaysDecay", "0.9975", CVAR_ARCHIVE);

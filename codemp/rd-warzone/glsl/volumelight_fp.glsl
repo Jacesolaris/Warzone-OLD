@@ -2,7 +2,7 @@
 
 uniform sampler2D			u_ScreenDepthMap;
 
-uniform vec4				u_Local0; // 0.0, 0.0, r_volumeLightStrength * SUN_VOLUMETRIC_SCALE, SUN_VOLUMETRIC_FALLOFF
+uniform vec4				u_Local0; // r_lensflare, 0.0, r_volumeLightStrength * SUN_VOLUMETRIC_SCALE, SUN_VOLUMETRIC_FALLOFF
 uniform vec4				u_Local1; // nightScale, isVolumelightShader, r_testvalue0->value, r_testvalue1->value
 uniform vec4				u_Local2; // r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value
 
@@ -123,6 +123,7 @@ uniform vec4				u_ViewInfo;				// zfar / znear, zfar, depthBits, znear
 
 varying vec2				var_DepthTex;
 varying vec3				var_ViewDir;
+varying vec3				var_ViewDir2;
 
 #define						r_shadowMapSize			u_Settings0.g
 
@@ -193,6 +194,49 @@ float GetVolumetricShadow(void)
 	return result;
 }
 
+#define __LENS_FLARE__
+
+#ifdef __LENS_FLARE__
+float flare(in vec3 s, in vec3 ctr, in vec3 sDir)
+{
+    float c = 0.;
+	s = normalize(s);
+    float sc = dot(s,-sDir);
+    c += .5*smoothstep(.99,1.,sc);
+    
+    s = normalize(s+.9*ctr);
+    sc = dot(s,-sDir);
+    c += .3*smoothstep(.9,.91,sc);
+    
+    s = normalize(s-.6*ctr);
+    sc = dot(s,-sDir);
+    c += smoothstep(.99,1.,sc);
+    
+    return c;
+}
+
+vec3 lensflare3D(in vec3 ray, in vec3 ctr, in vec3 sDir)
+{
+    vec3 red = vec3(1.,.6,.3);
+    vec3 green = vec3(.3,1.,.6);
+    vec3 blue = vec3(.6,.3,1.);
+	vec3 col = vec3(0.);
+    vec3 ref = reflect(ray,ctr);
+
+    col += red*flare(ref,ctr,sDir);
+    col += green*flare(ref-.15*ctr,ctr,sDir);
+    col += blue*flare(ref-.3*ctr,ctr,sDir);
+    
+    ref = reflect(ctr,ray);
+    col += red*flare(ref,ctr,sDir);
+    col += green*flare(ref+.15*ctr,ctr,sDir);
+    col += blue*flare(ref+.3*ctr,ctr,sDir);
+    
+    float d = dot(ctr,sDir);
+	return .4*col*max(0.,d*d*d*d*d);
+}
+#endif //__LENS_FLARE__
+
 void main()
 {
 	if (u_Local1.r >= 1.0)
@@ -215,7 +259,8 @@ void main()
 
 	// Extra brightness in the direction of the sun...
 	vec3 lDir = normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin.xyz);
-	float fall = max(dot(lDir, normalize(var_ViewDir)), 0.0);
+	vec3 vDir = normalize(var_ViewDir);
+	float fall = max(dot(lDir, vDir), 0.0);
 	fall = pow(fall, 16.0);
 	fall *= shadow;
 	fall *= 8.0;
@@ -241,6 +286,13 @@ void main()
 		vec3 nightColor = vec3(0.0);
 		totalColor.rgb = mix(totalColor.rgb, nightColor, u_Local1.r);
 	}
+
+#ifdef __LENS_FLARE__
+	if (u_Local0.r > 0.0)
+	{
+		totalColor.rgb += lensflare3D(vDir.xzy, normalize(var_ViewDir2).xzy, lDir.xzy) * shadow * 2.0;
+	}
+#endif //__LENS_FLARE__
 
 	gl_FragColor = vec4(totalColor, 1.0);
 }

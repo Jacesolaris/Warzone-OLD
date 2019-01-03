@@ -5,6 +5,7 @@
 #define __ENHANCED_AO__
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __CLOUD_SHADOWS__
+#define __LENS_FLARE__
 
 #ifdef USE_CUBEMAPS
 	#define __CUBEMAPS__

@@ -27,6 +27,7 @@ uniform vec4				u_ViewInfo; // zfar / znear
 
 varying vec2				var_DepthTex;
 varying vec3				var_ViewDir;
+varying vec3				var_ViewDir2;
 
 void main()
 {
@@ -34,6 +35,9 @@ void main()
 	vec2 screenCoords = gl_Position.xy / gl_Position.w;
 	var_DepthTex = attr_TexCoord0.xy;
 	var_ViewDir = u_ViewForward + u_ViewLeft * -screenCoords.x + u_ViewUp * screenCoords.y;
+	//var_ViewDir2 = u_ViewForward + u_ViewLeft * -0.5 + u_ViewUp * 0.5;
+	//var_ViewDir2 = u_ViewForward + u_ViewLeft * 0.5 + u_ViewUp * 0.5;
+	var_ViewDir2 = u_ViewForward + u_ViewLeft * 0.0 + u_ViewUp * 0.0;
 }
 
 #endif //__USING_SHADOW_MAP__

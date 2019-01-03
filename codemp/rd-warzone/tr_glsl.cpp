@@ -4032,13 +4032,13 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load bloom_combine shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	/*attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.lensflareShader, "lensflare", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lensflare_vp, fallbackShader_lensflare_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load lensflare shader!");
-	}
+	}*/
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
@@ -5524,7 +5524,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.lensflareShader))
+	/*if (!GLSL_EndLoadGPUShader(&tr.lensflareShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load lensflare shader!");
 	}
@@ -5537,7 +5537,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_FinishGPUShader(&tr.lensflareShader);
 #endif
 
-	numEtcShaders++;
+	numEtcShaders++;*/
 
 
 
@@ -6971,7 +6971,7 @@ void GLSL_ShutdownGPUShaders(void)
 	//GLSL_DeleteGPUShader(&tr.hbaoCombineShader);
 	GLSL_DeleteGPUShader(&tr.bloomBlurShader);
 	GLSL_DeleteGPUShader(&tr.bloomCombineShader);
-	GLSL_DeleteGPUShader(&tr.lensflareShader);
+	//GLSL_DeleteGPUShader(&tr.lensflareShader);
 	GLSL_DeleteGPUShader(&tr.multipostShader);
 	GLSL_DeleteGPUShader(&tr.anamorphicBlurShader);
 	GLSL_DeleteGPUShader(&tr.anamorphicCombineShader);

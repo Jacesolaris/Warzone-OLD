@@ -3604,6 +3604,7 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
+#if 0
 		if (!SCREEN_BLUR && r_lensflare->integer)
 		{
 			if (!r_lowVram->integer)
@@ -3614,6 +3615,7 @@ const void *RB_PostProcess(const void *data)
 				DEBUG_EndTimer(qtrue);
 			}
 		}
+#endif
 
 		if (!SCREEN_BLUR && r_testshader->integer)
 		{
