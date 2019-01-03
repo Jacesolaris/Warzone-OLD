@@ -1373,6 +1373,8 @@ typedef struct shader_s {
 
 	float		glowStrength;
 	float		glowVibrancy;
+	float		emissiveRadiusScale;
+	float		emissiveColorScale;
 
 	cullType_t	cullType;				// CT_FRONT_SIDED, CT_BACK_SIDED, or CT_TWO_SIDED
 	qboolean	polygonOffset;			// set for decals and other items that must be offset 

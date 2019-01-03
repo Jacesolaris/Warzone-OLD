@@ -4642,6 +4642,10 @@ static qboolean ParseShader( const char *name, const char **text )
 	shader.tesselationLevel = 0.0;
 	shader.tesselationAlpha = 0.0;
 
+	// Also init emissive strengths...
+	shader.emissiveRadiusScale = 1.0;
+	shader.emissiveColorScale = 1.0;
+
 	s = 0;
 
 	token = COM_ParseExt( text, qtrue );
@@ -4931,6 +4935,30 @@ static qboolean ParseShader( const char *name, const char **text )
 				continue;
 			}
 			shader.glowVibrancy = atof(token);
+			continue;
+		}
+		else if (!Q_stricmp(token, "emissiveRadiusScale"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (!token[0])
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parm for 'emissiveRadiusScale' keyword in shader '%s'\n", shader.name);
+				shader.emissiveRadiusScale = 1.0;
+				continue;
+			}
+			shader.emissiveRadiusScale = atof(token);
+			continue;
+		}
+		else if (!Q_stricmp(token, "emissiveColorScale"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (!token[0])
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parm for 'emissiveColorScale' keyword in shader '%s'\n", shader.name);
+				shader.emissiveColorScale = 1.0;
+				continue;
+			}
+			shader.emissiveColorScale = atof(token);
 			continue;
 		}
 		//

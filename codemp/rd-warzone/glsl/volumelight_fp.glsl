@@ -29,9 +29,10 @@ const float fVolumetricFalloffRange = 0.4;
 
 uniform vec3				u_vlightColors;
 
+uniform vec2				u_vlightPositions;
 
 #ifndef __USING_SHADOW_MAP__
-uniform vec2				u_vlightPositions;
+//uniform vec2				u_vlightPositions;
 
 varying vec2				var_TexCoords;
 
@@ -206,7 +207,20 @@ void main()
 #define lightUpper2 ( 255.0 / 16384.0 )
 	shadow = clamp((shadow - lightLower2) * lightUpper2, 0.0, 1.0);
 
+	shadow = pow(shadow, 1.333); // a little more smoothness/contrast...
+	//shadow = smoothstep(0.0, 1.0, pow(shadow, 1.333)); // a little more smoothness/contrast...
+
 	vec3 totalColor = u_vlightColors * shadow;
+
+
+	// Extra brightness in the direction of the sun...
+	vec3 lDir = normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin.xyz);
+	float fall = max(dot(lDir, normalize(var_ViewDir)), 0.0);
+	fall = pow(fall, 16.0);
+	fall *= shadow;
+	fall *= 8.0;
+	fall += 1.0;
+	totalColor *= fall;
 
 	totalColor.rgb *= VOLUMETRIC_STRENGTH;// * 1.5125;
 	
@@ -214,13 +228,6 @@ void main()
 //#define lightLower ( 512.0 / 255.0 )
 //#define lightUpper ( 255.0 / 4096.0 )
 //	totalColor.rgb = clamp((totalColor.rgb - lightLower) * lightUpper, 0.0, 1.0);
-	
-//	vec3 pMap = texture(u_PositionMap, var_DepthTex).xyz;
-//	vec3 lDir = normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin.xyz);
-//	vec3 vDir = normalize(pMap.xyz - u_ViewOrigin.xyz);
-//	float atten = 1.0 - clamp(pow(distance(vDir, lDir) / 5.0, 0.3), 0.0, 1.0);
-//	totalColor.rgb *= atten;
-	//totalColor.rgb = vec3(atten);
 
 	if (u_Local1.r > 0.0)
 	{// Adjust the sun color at sunrise/sunset...

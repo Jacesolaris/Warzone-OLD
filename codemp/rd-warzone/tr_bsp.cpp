@@ -4370,8 +4370,8 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 					else
 						VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
 
-					emissiveRadiusScale = surf->shader->stages[stage]->emissiveRadiusScale;
-					emissiveColorScale = surf->shader->stages[stage]->emissiveColorScale;
+					emissiveRadiusScale = surf->shader->stages[stage]->emissiveRadiusScale * surf->shader->emissiveRadiusScale;
+					emissiveColorScale = surf->shader->stages[stage]->emissiveColorScale * surf->shader->emissiveColorScale;
 					emissiveHeightScale = surf->shader->stages[stage]->emissiveHeightScale;
 
 					if (surf->cullinfo.type & CULLINFO_SPHERE)
